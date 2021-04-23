@@ -22,23 +22,29 @@ def does_file_exist(filename,mat):
 		print('does not exist, I will make the covariance')
 
 class FilePathHandler(object):
-	def __init__(self,init_root_dir):
+	def __init__(self,init_root_dir,filename):
 		pipeline_base = init_root_dir.replace('Utilities','Pipeline')
-		self.tmp = os.path.join(pipeline_base,'tmp')
-		self.out = os.path.join(pipeline_base,'out')
-		self.store = os.path.join(pipeline_base,'store')
+		self.tmp = os.path.join(pipeline_base,filename,'tmp')
+		self.out = os.path.join(pipeline_base,filename,'out')
+		self.store = os.path.join(pipeline_base,filename,'store')
 
+		for dirs in [self.tmp,self.out,self.store]:
+			CHECK_FOLDER = os.path.isdir(dirs)
+			if not CHECK_FOLDER:
+				os.makedirs(dirs)
+				print("created folder : ", dirs)
+				
 	def file_return(self,base_folder,filename):
 		return os.path.join(base_folder,filename)
 
 	def tmp_file(self,filename):
-		self.file_return(self.tmp,filename)
+		return self.file_return(self.tmp,filename)
 
 	def out_file(self,filename):
-		self.file_return(self.out,filename)
+		return self.file_return(self.out,filename)
 
 	def store_file(self,filename):
-		self.file_return(self.store,filename)
+		return self.file_return(self.store,filename)
 
 # def return_day_filepath(self):
 # 	return date.today().strftime("%d-%m-%y")
