@@ -7,6 +7,7 @@ from GeneralUtilities.Compute.list import find_nearest
 from GeneralUtilities.Compute.constants import degree_dist
 from scipy.interpolate import griddata
 from GeneralUtilities.Filepath.instance import get_base_folder
+import geopy
 
 class DepthBase(object):
 		
@@ -19,6 +20,9 @@ class DepthBase(object):
 		if pos.__class__  in [list,tuple]:
 			dummy_x = pos[1]
 			dummy_y = pos[0]
+		if pos.__class__ == geopy.point.Point:
+			x = pos.longitude
+			y = pos.latitude
 		assert dummy_x<=180
 		assert dummy_x>=-180
 		assert dummy_y<=90
