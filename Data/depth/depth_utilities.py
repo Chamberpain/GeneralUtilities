@@ -3,10 +3,10 @@ from netCDF4 import Dataset
 import numpy as np 
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
-from compute_utilities.list_utilities import find_nearest
-from compute_utilities.constants import degree_dist
+from GeneralUtilities.Compute.list import find_nearest
+from GeneralUtilities.Compute.constants import degree_dist
 from scipy.interpolate import griddata
-from data_save_utilities.file_path_utilities import get_base_folder
+from GeneralUtilities.Filepath.instance import get_base_folder
 
 class DepthBase(object):
 		
