@@ -1,0 +1,23 @@
+\documentclass[11pt]{amsart}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\title{Explanation of Directory Structure}
+
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+The directory structure in all projects is inspired by this post (https://towardsdatascience.com/how-to-keep-your-research-projects-organized-part-1-folder-structure-10bd56034d3a) and will have a utilities folder which will include the subdirectories of compute, data, and plot; there will be a data folder which will contain locally necessary files - typically these will be symbolic links to data directories elsewhere on the server. In general these data files should not be manipulated, or if they are those manipulations should be documented. there will be an Pipeline folder, which will contain a folder for every script with 3 sub folders - one folder for temporary data, one folder for data the requires further inspection or took a long time to compute, and one data for files that are likely to t.
+%\section{}
+%\subsection{}
+
+
+
+\end{document}  
