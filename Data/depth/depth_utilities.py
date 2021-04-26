@@ -43,10 +43,6 @@ class DepthBase(object):
 
 	def return_z(self,pos):
 		x_index,y_index = self.get_index_from_pos(pos)
-		print('x index is')
-		print(x_index)
-		print('y index is')
-		print(y_index)
 		return self.z[y_index,x_index]
 
 	def return_gradient(self,pos):
@@ -104,7 +100,3 @@ class PACIOOS(DepthBase):
 		self.x = self.nc_fid['x'][:]
 		self.y = self.nc_fid['y'][:]
 		self.z = self.nc_fid['z'][:]
-
-	def too_shallow(self,pos):
-		depth = self.return_z(pos)
-		return depth>-500
