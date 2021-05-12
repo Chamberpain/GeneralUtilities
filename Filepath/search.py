@@ -1,8 +1,12 @@
-def find_files(dir_,ext_):
-	import os
-	import fnmatch
+def find_files(data_directory,fmt,function=str):
+	frames = []
 	matches = []
-	for root, dirnames, filenames in os.walk(dir_):
-	    for filename in fnmatch.filter(filenames,ext_):
-	        matches.append(os.path.join(root, filename))
-	return matches
+	for root, dirnames, filenames in os.walk(data_directory):
+		for filename in fnmatch.filter(filenames,fmt):
+			matches.append(os.path.join(root, filename))
+	for n, match in enumerate(matches):
+		print 'file is ',match,', there are ',len(matches[:])-n,'floats left'
+		t = time.time()
+		frames.append(function(match))
+		print 'Building and merging datasets took ', time.time()-t
+	return frames
