@@ -24,27 +24,38 @@ def does_file_exist(filename,mat):
 class FilePathHandler(object):
 	def __init__(self,init_root_dir,filename):
 		pipeline_base = init_root_dir.replace('Utilities','Pipeline')
-		self.tmp = os.path.join(pipeline_base,filename,'tmp')
-		self.out = os.path.join(pipeline_base,filename,'out')
-		self.store = os.path.join(pipeline_base,filename,'store')
+		self._tmp = os.path.join(pipeline_base,filename,'tmp')
+		self._out = os.path.join(pipeline_base,filename,'out')
+		self._store = os.path.join(pipeline_base,filename,'store')
 
-		for dirs in [self.tmp,self.out,self.store]:
-			CHECK_FOLDER = os.path.isdir(dirs)
-			if not CHECK_FOLDER:
-				os.makedirs(dirs)
-				print("created folder : ", dirs)
+		folder_idx = init_root_dir.split('/').index('Projects')
+		self._data = '/'.join(init_root_dir.split('/')[:folder_idx+2])+'/Data/'
+
+		for dirs in [self._data,self._tmp,self._out,self._store]:
+			self.check_folder(dirs)
 				
+	def check_folder(self,folder):
+		CHECK_FOLDER = os.path.isdir(folder)
+		if not CHECK_FOLDER:
+			os.makedirs(base_folder)
+			print("created folder : ",folder)
+
 	def file_return(self,base_folder,filename):
+		self.check_folder(base_folder)
 		return os.path.join(base_folder,filename)
 
 	def tmp_file(self,filename):
-		return self.file_return(self.tmp,filename)
+		return self.file_return(self._tmp,filename)
 
 	def out_file(self,filename):
-		return self.file_return(self.out,filename)
+		return self.file_return(self._out,filename)
 
 	def store_file(self,filename):
-		return self.file_return(self.store,filename)
+		return self.file_return(self._store,filename)
+
+	def data_file(self,filename):
+		return self.file_return(self._data,filename)
+
 
 # def return_day_filepath(self):
 # 	return date.today().strftime("%d-%m-%y")
