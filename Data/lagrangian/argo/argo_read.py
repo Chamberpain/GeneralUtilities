@@ -6,8 +6,8 @@ import geopy
 import re
 import numpy as np 
 import geopy.distance
-from data_save_utilities.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead
-from data_save_utilities.pickle_utilities import load,save
+from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead
+from GeneralUtilities.Data.pickle_utilities import load,save
 from GeneralUtilities.Filepath.instance import FilePathHandler
 
 
@@ -343,7 +343,7 @@ class ArgoReader(BaseRead):
 					print('drift depth greater than 1500 mb')
 				return ~(test_1&test_2)
 
-def aggregate_argo_list(num=-1,base_folder,list_save=False,recompile=False):
+def aggregate_argo_list(base_folder,read_class=ArgoReader,num=-1):
 	"""
 	function that returns dictionary of argo read classes
 
@@ -360,22 +360,15 @@ def aggregate_argo_list(num=-1,base_folder,list_save=False,recompile=False):
 		matches = []
 		for root, dirnames, filenames in os.walk(base_folder):
 			meta_match = re.compile('.*meta.nc') # all folders will have a meta file
-			if filter(meta_match.match,filenames):
+			if any([file.endswith('meta.nc') for file in filenames]):
 				matches.append(root)
-		save(ROOT_DIR+"/argo_matches.pkl",matches)
 		return matches
 
-	if recompile:
-		compile_matches()
-	else:
-		try:
-			matches = load(ROOT_DIR+"argo_matches.pkl")
-		except IOError:
-			print('there was an error loading '+ROOT_DIR+"argo_matches.pkl")
-			matches = compile_matches()
+	matches = compile_matches()
 
 	number = 0
-	while num<len(matches[:num]):
-		print('I am opening number match ',num)
-		ArgoReader(matches[num])\
-		number +=1 
+	while number<len(matches[:num]):
+		print('I am opening number match ',number)
+		print ('filename is ',matches[number])
+		read_class(matches[number])
+		number += 1 

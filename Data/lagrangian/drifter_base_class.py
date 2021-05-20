@@ -12,14 +12,14 @@ class BasePosition(object):
 		lat,lon = zip(*[(_.latitude,_.longitude) for _ in self._list])
 		plt.plot(lon,lat)
 
-	def return_pos_bins(self,lat_bins,lon_bins,index_return=True,index_values=None):
+	def return_pos_bins(self,lat_bins,lon_bins,index_values=None):
 		""" Returns bins of position list in index form or actual 
 
 			Parameters
 			----------
 			lat_bins: list of latitudes of the grid
 			lon_bins: list of longitudes of the grid
-			index: whether you want the grid indices or actual grid lat/lon
+			index_values: only set you want to include
 
 			Returns
 			-------
@@ -29,13 +29,9 @@ class BasePosition(object):
 			pos_list = list(filter(None,np.array(self._list)[index_values].tolist()))
 		else:
 			pos_list = list(filter(None,self._list))
-		lat_bin_index = np.digitize([_.latitude for _ in pos_list],lat_bins)
-		lon_bin_index = np.digitize([_.longitude for _ in pos_list],lon_bins)
-
-		if index_return:
-			return zip(lat_bin_index,lon_bin_index)
-		else: 
-			return zip([lat_bins[(_-1)] for _ in lat_bin_index],[lon_bins[(_-1)] for _ in lon_bin_index])
+		lat_bin_index = np.digitize([x.latitude for x in pos_list],lat_bins)
+		lon_bin_index = np.digitize([x.longitude for x in pos_list],lon_bins)
+		return [geopy.Point(x) for x in zip(lat_bins[lat_bin_index],lon_bins[lon_bin_index])]
 
 	def is_problem(self):
 		"""
@@ -122,7 +118,6 @@ class BaseRead(object):
 		if truth_value: 
 			print('I am a problem, do not add me to anything')
 		return truth_value
-
 
 	def get_pos_list(self):
 		argos_list = []
