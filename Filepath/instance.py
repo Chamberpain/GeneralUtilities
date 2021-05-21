@@ -34,10 +34,11 @@ class FilePathHandler(object):
 		for dirs in [self._data,self._tmp,self._out,self._store]:
 			self.check_folder(dirs)
 				
+				
 	def check_folder(self,folder):
 		CHECK_FOLDER = os.path.isdir(folder)
 		if not CHECK_FOLDER:
-			os.makedirs(base_folder)
+			os.makedirs(folder)
 			print("created folder : ",folder)
 
 	def file_return(self,base_folder,filename):
