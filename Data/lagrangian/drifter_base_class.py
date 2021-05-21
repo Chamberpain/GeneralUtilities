@@ -29,8 +29,8 @@ class BasePosition(object):
 			pos_list = list(filter(None,np.array(self._list)[index_values].tolist()))
 		else:
 			pos_list = list(filter(None,self._list))
-		lat_bin_index = np.digitize([x.latitude for x in pos_list],lat_bins)
-		lon_bin_index = np.digitize([x.longitude for x in pos_list],lon_bins)
+		lat_bin_index = np.digitize([x.latitude for x in pos_list],lat_bins,right=True)
+		lon_bin_index = np.digitize([x.longitude for x in pos_list],lon_bins,right=True)
 		return [geopy.Point(x) for x in zip(lat_bins[lat_bin_index],lon_bins[lon_bin_index])]
 
 	def is_problem(self):
