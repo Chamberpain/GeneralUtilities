@@ -4,8 +4,10 @@ import datetime
 import geopy
 import numpy as np 
 import geopy.distance
-from data_save_utilities.lagrangian.drifter_base_class import Speed,BasePosition,BaseRead
-from data_save_utilities.lagrangian.argo.argo_read import BaseDate
+from GeneralUtilities.Data.lagrangian.drifter_base_class import Speed,BasePosition,BaseRead
+from GeneralUtilities.Data.lagrangian.argo.argo_read import BaseDate
+import pickle
+
 
 class Date(BaseDate):
 	def __init__(self,t):
@@ -111,20 +113,33 @@ def aggregate_sose_list():
 	-------
 	dictionary of argo read classes.
 	"""
-	data_file_name = os.getenv("HOME")+'/Data/Raw/SOSE/particle_release/SO_RAND_0001.XYZ.0000000001.0003153601.data'
-	npts= 10000
-	ref_date = datetime.datetime(year=2010,month=1,day=1)
-	opt=np.fromfile(data_file_name,'>f4').reshape(-1,3,npts)
-	print("data has %i records" %(opt.shape[0]))
 
-	k = 0
-	while k < opt.shape[2]:
-		print(k)
-		x,y=opt[:,0,k],opt[:,1,k]#this is in model grid index coordinate, convert to lat-lon using x=x/6.0;y=y/6.0-77.875
-		t = range(opt.shape[0])
-		date=[ref_date+datetime.timedelta(days=10*j) for j in t]
-		x=x/6.0;y=y/6.0-77.875
-		x = x%360
-		x[x>180]=x[x>180]-360
-		yield SOSEReader(x,y,date,k)
-		k +=1 
+	all_dict_filename = os.getenv("HOME")+'/Data/Raw/SOSE/all_dict'
+	
+	try:
+		with open(all_dict_filename,'rb') as pickle_file:
+			out_data = pickle.load(pickle_file)
+			BaseRead.all_dict = out_data
+	except:
+		data_file_name = os.getenv("HOME")+'/Data/Raw/SOSE/particle_release/SO_RAND_0001.XYZ.0000000001.0003153601.data'
+		npts= 10000
+		ref_date = datetime.datetime(year=2010,month=1,day=1)
+		opt=np.fromfile(data_file_name,'>f4').reshape(-1,3,npts)
+		print("data has %i records" %(opt.shape[0]))
+
+		k = 0
+		while k < opt.shape[2]:
+			print(k)
+			x,y=opt[:,0,k],opt[:,1,k]#this is in model grid index coordinate, convert to lat-lon using x=x/6.0;y=y/6.0-77.875
+			t = range(opt.shape[0])
+			date=[ref_date+datetime.timedelta(days=10*j) for j in t]
+			x=x/6.0;y=y/6.0-77.875
+			x = x%360
+			x[x>180]=x[x>180]-360
+			SOSEReader(x,y,date,k)
+			k +=1 
+
+		with open(all_dict_filename, 'wb') as pickle_file:
+			pickle.dump(BaseRead.all_dict,pickle_file)
+		pickle_file.close()
+

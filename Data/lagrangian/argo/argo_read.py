@@ -9,6 +9,7 @@ import geopy.distance
 from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead
 from GeneralUtilities.Data.pickle_utilities import load,save
 from GeneralUtilities.Filepath.instance import FilePathHandler
+import pickle
 
 
 
@@ -343,7 +344,7 @@ class ArgoReader(BaseRead):
 					print('drift depth greater than 1500 mb')
 				return ~(test_1&test_2)
 
-def aggregate_argo_list(base_folder,read_class=ArgoReader,num=-1):
+def aggregate_argo_list(read_class=ArgoReader,num=-1):
 	"""
 	function that returns dictionary of argo read classes
 
@@ -356,19 +357,30 @@ def aggregate_argo_list(base_folder,read_class=ArgoReader,num=-1):
 	-------
 	dictionary of argo read classes.
 	"""
-	def compile_matches():
-		matches = []
-		for root, dirnames, filenames in os.walk(base_folder):
-			meta_match = re.compile('.*meta.nc') # all folders will have a meta file
-			if any([file.endswith('meta.nc') for file in filenames]):
-				matches.append(root)
-		return matches
 
-	matches = compile_matches()
+	all_dict_filename = os.getenv("HOME")+'/Data/Raw/Argo/all_dict'
+	try: 
+		with open(all_dict_filename,'rb') as pickle_file:
+			out_data = pickle.load(pickle_file)
+			BaseRead.all_dict = out_data		
+	except FileNotFoundError:
+		data_file_name = os.getenv("HOME")+'/Data/Raw/Argo'
+		def compile_matches():
+			matches = []
+			for root, dirnames, filenames in os.walk(data_file_name):
+				meta_match = re.compile('.*meta.nc') # all folders will have a meta file
+				if any([file.endswith('meta.nc') for file in filenames]):
+					matches.append(root)
+			return matches
 
-	number = 0
-	while number<len(matches[:num]):
-		print('I am opening number match ',number)
-		print ('filename is ',matches[number])
-		read_class(matches[number])
-		number += 1 
+		matches = compile_matches()
+
+		number = 0
+		while number<len(matches[:num]):
+			print('I am opening number match ',number)
+			print ('filename is ',matches[number])
+			read_class(matches[number])
+			number += 1 
+		with open(all_dict_filename, 'wb') as pickle_file:
+			pickle.dump(BaseRead.all_dict,pickle_file)
+		pickle_file.close()

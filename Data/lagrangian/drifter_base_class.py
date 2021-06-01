@@ -4,6 +4,7 @@ import geopy.distance
 import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 class BasePosition(object):
 	name = 'Position'
@@ -154,7 +155,10 @@ class BaseRead(object):
 			full_date_list+=_.prof.date._list
 		return full_date_list
 
-
+	@staticmethod
+	def get_subsampled_float_dict(percent):
+		N = round(len(BaseRead.all_dict)*percent)
+		return dict(random.sample(BaseRead.all_dict.items(), N))
 
 class Speed():
 	""" class that allows dynamic logic of trajectory speed 
