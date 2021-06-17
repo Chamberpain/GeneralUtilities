@@ -32,10 +32,9 @@ class LatList(list):
 
 class TupleList(list):
 	def __init__(self, *args, **kwargs):
-		assert all([isinstance(x,geopy.Point) for x in self]) 
+		super().__init__(*args, **kwargs)
 		# total list must be composed of geopy.Points 
-		self = list.__init__(*args, **kwargs)
-		return self	
+		assert all([isinstance(x,geopy.Point) for x in self]) 
 
 	def tuple_total_list(self):
 		return [tuple(x)[:2] for x in self]
