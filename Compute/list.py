@@ -16,8 +16,8 @@ def flat_list(non_flat_list):
 class LonList(list):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		assert max(self)<180
-		assert min(self)>-180
+		assert max(self)<=180
+		assert min(self)>=-180
 
 	def return_lon360(self):
 		holder = np.array(self)
@@ -30,7 +30,7 @@ class LatList(list):
 		assert max(self)<90
 		assert min(self)>-90
 
-class TupleList(list):
+class GeoList(list):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		# total list must be composed of geopy.Points 

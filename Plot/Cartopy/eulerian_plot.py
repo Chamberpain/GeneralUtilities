@@ -113,3 +113,13 @@ class HypernavCartopy(BaseCartopy):
         self.ax.scatter(float_pos_dict['lon'],float_pos_dict['lat'],c='pink',linewidths=5,marker='x',s=80,zorder=10)
         self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
         self.finish_map()
+
+class PointCartopy(BaseCartopy):
+    def __init__(self,geopy_point,*args,pad=1,**kwargs):
+        super().__init__(*args,**kwargs)          
+        llcrnrlon=(geopy_point.longitude-pad)
+        llcrnrlat=(geopy_point.latitude-pad)
+        urcrnrlon=(geopy_point.longitude+pad)
+        urcrnrlat=(geopy_point.latitude+pad)
+        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
+        self.finish_map()
