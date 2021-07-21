@@ -2,10 +2,39 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import numpy as np
+from cartopy import geodesic
+
+
+
+def ellipse(geod,lon, lat, b, a, n_samples=360,phi=0):
+    """
+    Return the coordinates of a geodetic ellipse of a given
+    x radius of a and y radius of b around a lon/lat point.
+
+    Radius is in meters in the geodetic's coordinate system.
+
+    """
+
+    tsid = a*b
+    radius = []
+    phi_r = phi* np.pi / 180
+    for az in (np.linspace(360, 0, n_samples)* np.pi / 180):
+        A = a * np.sin(az)*np.cos(phi_r)+b*np.cos(az)*np.sin(phi_r)
+        B = b * np.cos(az)*np.cos(phi_r)-b*np.sin(az)*np.sin(phi_r)
+        r = tsid / (B**2. + A**2.)**0.5
+        radius.append(r)
+
+    lons, lats, back_azim = geod.fwd(np.repeat(lon, n_samples),
+                                     np.repeat(lat, n_samples),
+                                     np.linspace(360, 0, n_samples),
+                                     np.array(radius),
+                                     radians=False,
+                                     )
+    return (lons,lats)
 
 
 class BaseCartopy():
-    def __init__(self,lat_grid,lon_grid,ax=False):
+    def __init__(self,lat_grid,lon_grid,ax=False,projection=ccrs.PlateCarree()):
         assert max(lat_grid)<=90
         assert min(lat_grid)>=-90
         assert max(lon_grid)<=180
@@ -16,7 +45,7 @@ class BaseCartopy():
 
         if not ax:
             fig = plt.figure()
-            self.ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+            self.ax = fig.add_subplot(1, 1, 1, projection=projection)
         else:
             self.ax = ax
 

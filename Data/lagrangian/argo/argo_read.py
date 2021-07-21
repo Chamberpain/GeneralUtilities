@@ -180,6 +180,34 @@ class ArgoReader(BaseRead):
 		else:
 			return None
 
+	@staticmethod
+	def get_pos_breakdown():
+		argos_list = []
+		gps_list = []
+		for _ in ArgoReader.all_dict.items():
+			if _[1].meta.positioning_system =='ARGOS':
+				argos_list.append(_[0])
+			if _[1].meta.positioning_system =='GPS':
+				gps_list.append(_[0])
+		return (argos_list,gps_list)
+
+	@staticmethod
+	def get_pos_list():
+		pos_list = []
+		for ii in ArgoReader.all_dict.values():
+			pos_list.append(ii.meta.positioning_system)
+		return pos_list
+
+	@staticmethod
+	def get_full_lat_lon_list():
+		lat_list = []
+		lon_list = []
+		for ii in ArgoReader.all_dict.values():
+			lat,lon = zip(*[(dummy.latitude,dummy.longitude) for dummy in ii.prof.pos._list])
+			lat_list += [lat]
+			lon_list += [lon]
+		return (lat_list,lon_list)
+
 
 	class BaseReadClass(object):
 		pass

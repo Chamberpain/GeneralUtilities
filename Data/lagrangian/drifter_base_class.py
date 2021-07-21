@@ -120,17 +120,6 @@ class BaseRead(object):
 			print('I am a problem, do not add me to anything')
 		return truth_value
 
-	def get_pos_list(self):
-		argos_list = []
-		gps_list = []
-		for _ in self.all_dict.iteritems():
-			if _[1].meta.positioning_system =='ARGOS':
-				argos_list.append(_[0])
-			if _[1].meta.positioning_system =='GPS':
-				gps_list.append(_[0])
-		return (argos_list,gps_list)
-
-
 	def get_full_speed_list(self):
 		full_speed_list = []
 
@@ -139,19 +128,9 @@ class BaseRead(object):
 			full_speed_list+=speed.tolist()
 		return (full_speed_list)
 
-
-	def get_full_lat_lon_list(self):
-		lat_list = []
-		lon_list = []
-		for _ in self.all_dict.itervalues():
-			lat,lon = zip(*[(dummy.latitude,dummy.longitude) for dummy in _.prof.pos._list])
-			lat_list += lat
-			lon_list += lon
-		return (lat_list,lon_list)
-
 	def get_full_date_list(self):
 		full_date_list = []
-		for _ in self.all_dict.itervalues():
+		for _ in self.all_dict.values():
 			full_date_list+=_.prof.date._list
 		return full_date_list
 

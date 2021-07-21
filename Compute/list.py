@@ -1,5 +1,6 @@
 from __future__ import print_function
 import datetime
+import numpy as np
 import geopy
 
 def find_nearest(items, pivot,test=True):
@@ -31,10 +32,12 @@ class LatList(list):
 		assert min(self)>-90
 
 class GeoList(list):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, lat_sep=None, lon_sep=None,**kwargs):
 		super().__init__(*args, **kwargs)
 		# total list must be composed of geopy.Points 
 		assert all([isinstance(x,geopy.Point) for x in self]) 
+		self.lat_sep = lat_sep
+		self.lon_sep = lon_sep
 
 	def tuple_total_list(self):
 		return [tuple(x)[:2] for x in self]
@@ -42,6 +45,23 @@ class GeoList(list):
 	def lats_lons(self):
 		lats,lons = zip(*self.tuple_total_list())
 		return (LatList(lats),LonList(lons))
+
+	def unique_lats_lons(self):
+		lats,lons = zip(*self.tuple_total_list())
+		return (LatList(np.sort(np.unique(lats))),LonList(np.sort(np.unique(lons))))
+
+	def reduced_res(self,idx,new_lat_sep,new_lon_sep):
+		lat_ratio = self.lat_sep/new_lat_sep
+		lon_ratio = self.lon_sep/new_lon_sep
+		assert lat_ratio%1==0
+		assert lon_ratio%1==0
+		#latitude and longitude must be divisable by each other, or there will be holes
+		lat = self[idx].latitude
+		lon = self[idx].longitude
+		new_lats = [lat+new_lat_sep*x for x in range(int(lat_ratio))]
+		new_lons = [lon+new_lon_sep*x for x in range(int(lon_ratio))]
+		lats,lons = np.meshgrid(new_lats,new_lons)
+		return list(zip(lats.flatten(),lons.flatten()))
 
 class TimeList(list):
 	def __init__(self, *args, **kwargs):
