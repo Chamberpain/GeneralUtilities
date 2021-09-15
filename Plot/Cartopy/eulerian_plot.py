@@ -53,8 +53,8 @@ class BaseCartopy():
         return np.meshgrid(self.lon_grid,self.lat_grid)
 
     def finish_map(self):
-        self.ax.add_feature(cfeature.LAND)
-        self.ax.add_feature(cfeature.COASTLINE)
+        self.ax.add_feature(cfeature.LAND,zorder=10)
+        self.ax.add_feature(cfeature.COASTLINE,zorder=10)
         self.ax.set_aspect('auto')
         gl = self.ax.gridlines(draw_labels=True)
         gl.xlabels_top = False
@@ -86,6 +86,28 @@ class CreteCartopy(BaseCartopy):
         self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
         self.finish_map()
 
+class KonaCartopy(BaseCartopy):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        print('I am plotting Kona')
+        llcrnrlon=-157
+        llcrnrlat=18.8
+        urcrnrlon=-155.6
+        urcrnrlat=20.35
+        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
+        self.finish_map()
+
+class PuertoRicoCartopy(BaseCartopy):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        print('I am plotting Puerto Rico')
+        llcrnrlon=-68.5 
+        llcrnrlat=16
+        urcrnrlon=-65
+        urcrnrlat=22.5
+        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
+        self.finish_map()
+
 class MobyCartopy(BaseCartopy):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -100,7 +122,7 @@ class MobyCartopy(BaseCartopy):
         self.ax.scatter(center_lon,center_lat,500,marker='*',color='Red',zorder=10)
         self.finish_map()
 
-class GomCartopy(BaseCartopy):
+class GOMCartopy(BaseCartopy):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         print('I am plotting GOM')
@@ -108,6 +130,17 @@ class GomCartopy(BaseCartopy):
         llcrnrlat=20.5
         urcrnrlon=-81.5
         urcrnrlat=30.5
+        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())        
+        self.finish_map()
+
+class CCSCartopy(BaseCartopy):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        print('I am plotting GOM')
+        llcrnrlon=-135.
+        llcrnrlat=20
+        urcrnrlon=-105
+        urcrnrlat=55
         self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())        
         self.finish_map()
 

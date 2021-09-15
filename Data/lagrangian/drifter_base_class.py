@@ -13,7 +13,7 @@ class BasePosition(object):
 		lat,lon = zip(*[(_.latitude,_.longitude) for _ in self._list])
 		plt.plot(lon,lat)
 
-	def return_pos_bins(self,lat_bins,lon_bins,index_values=None):
+	def return_pos_bins(self,lat_bins,lon_bins,index_values=False):
 		""" Returns bins of position list in index form or actual 
 
 			Parameters
@@ -30,9 +30,11 @@ class BasePosition(object):
 			pos_list = list(filter(None,np.array(self._list)[index_values].tolist()))
 		else:
 			pos_list = list(filter(None,self._list))
-		lat_bin_index = np.digitize([x.latitude for x in pos_list],lat_bins,right=True)
-		lon_bin_index = np.digitize([x.longitude for x in pos_list],lon_bins,right=True)
-		return [geopy.Point(x) for x in zip(lat_bins[lat_bin_index],lon_bins[lon_bin_index])]
+		lat_bin_index = lat_bins.digitize([x.latitude for x in pos_list])
+		lon_bin_index = lon_bins.digitize([x.longitude for x in pos_list])
+		lats = [lat_bins[x-1] for x in lat_bin_index]
+		lons = [lon_bins[x-1] for x in lon_bin_index]
+		return [geopy.Point(x) for x in zip(lats,lons)]
 
 	def is_problem(self):
 		"""
@@ -120,19 +122,35 @@ class BaseRead(object):
 			print('I am a problem, do not add me to anything')
 		return truth_value
 
-	def get_full_speed_list(self):
+	@staticmethod
+	def get_full_speed_list():
 		full_speed_list = []
 
-		for k,_ in enumerate(self.all_dict.itervalues()):
+		for k,_ in enumerate(BaseRead.all_dict.values()):
 			speed = _.prof.speed._list
 			full_speed_list+=speed.tolist()
 		return (full_speed_list)
 
-	def get_full_date_list(self):
+	@staticmethod
+	def get_full_date_list():
 		full_date_list = []
-		for _ in self.all_dict.values():
+		for _ in BaseRead.all_dict.values():
 			full_date_list+=_.prof.date._list
 		return full_date_list
+
+	@staticmethod
+	def get_recent_date_list():
+		recent_date_list = []
+		for x in BaseRead.all_dict.values():
+			recent_date_list+=[x.prof.date._list[-1]]
+		return recent_date_list	
+
+	@staticmethod
+	def get_recent_bins(lat_bins,lon_bins):
+		bin_list = []
+		for x in BaseRead.all_dict.values():
+			bin_list+=[x.prof.pos.return_pos_bins(lat_bins,lon_bins,index_values=False)[-1]]
+		return bin_list
 
 	@staticmethod
 	def get_subsampled_float_dict(percent):
@@ -202,13 +220,13 @@ class all_drift_holder():
 		self.lon_bins = np.arange(-180,180,lon_spacing)
 
 	def full_time_delta_parse(self,span):
-		for _ in self.class_list.itervalues():
+		for _ in self.class_list.values():
 			_.prof.time_delta_parse(span)
 
 
 	def get_full_bins(self):
 		bin_list = []
-		for _ in self.class_list.itervalues():
+		for _ in self.class_list.values():
 			bin_list+=_.prof.pos.return_pos_bins(self.lat_bins,self.lon_bins,index_return=False)
 		return bin_list
 

@@ -3,6 +3,12 @@ import datetime
 import numpy as np
 import geopy
 
+
+
+def flat_list(non_flat_list):
+	flat_list = [item for sublist in non_flat_list for item in sublist]
+	return flat_list
+
 def find_nearest(items, pivot,test=True):
 	nearest = min(items, key=lambda x: abs(x - pivot))
 	item_range = max(items)-min(items)
@@ -10,14 +16,56 @@ def find_nearest(items, pivot,test=True):
 		assert (nearest-pivot)<0.1*item_range # only allow 10% extrapolation
 	return	nearest
 
-def flat_list(non_flat_list):
-	flat_list = [item for sublist in non_flat_list for item in sublist]
-	return flat_list
+class BaseList(list):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)	
 
-class LonList(list):
+	def __getslice__(self,i,j):
+		return self.__class__(list.__getslice__(self, i, j))
+
+	def __add__(self, rhs):
+		return self.__class__(list.__add__(self, rhs))
+
+	def __getitem__(self, item):
+		result = list.__getitem__(self, item)
+		try:
+			return self.__class__(result)
+		except TypeError:
+			return result
+
+	def __getslice__(self,i,j):
+		return self.__class__(list.__getslice__(self, i, j))
+
+	def __add__(self,other):
+		return self.__class__(list.__add__(self,other))
+
+	def __mul__(self,other):
+		return self.__class__(list.__mul__(self,other))
+
+	def find_nearest(self,value,test = True, idx = False):
+		if idx:
+			list_value = find_nearest(self,value,test=test)
+			return self.index(list_value)
+		else:
+			return find_nearest(self,value,test=test)
+
+	def digitize(self,dummy):
+		return np.digitize(dummy,self,right=False)
+
+class VariableList(BaseList):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		assert max(self)<=180
+		assert all([isinstance(x,str) for x in self]) 
+
+class DepthList(BaseList):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		assert max(self)<=0
+
+class LonList(BaseList):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		assert max(self)<180
 		assert min(self)>=-180
 
 	def return_lon360(self):
@@ -25,19 +73,24 @@ class LonList(list):
 		holder[holder<0]=holder[holder<0]+360
 		return holder
 
-class LatList(list):
+class LatList(BaseList):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		assert max(self)<90
-		assert min(self)>-90
+		assert max(self)<=90
+		assert min(self)>=-90
 
-class GeoList(list):
+class GeoList(BaseList):
 	def __init__(self, *args, lat_sep=None, lon_sep=None,**kwargs):
 		super().__init__(*args, **kwargs)
 		# total list must be composed of geopy.Points 
 		assert all([isinstance(x,geopy.Point) for x in self]) 
 		self.lat_sep = lat_sep
 		self.lon_sep = lon_sep
+
+	def return_dimensions(self):
+		lat_grid = LatList(np.arange(-90,90.01,self.lat_sep))
+		lon_grid = LonList(np.arange(-180,179.99,self.lon_sep))
+		return (lat_grid,lon_grid)
 
 	def tuple_total_list(self):
 		return [tuple(x)[:2] for x in self]
@@ -63,7 +116,7 @@ class GeoList(list):
 		lats,lons = np.meshgrid(new_lats,new_lons)
 		return list(zip(lats.flatten(),lons.flatten()))
 
-class TimeList(list):
+class TimeList(BaseList):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		assert all([isinstance(x,datetime.datetime) for x in self]) 
@@ -75,12 +128,6 @@ class TimeList(list):
 	@staticmethod
 	def time_list_from_seconds(seconds_list):
 		return TimeList([TimeList.ref_date + datetime.timedelta(seconds=x) for x in seconds_list])
-
-	def closest_datetime(self,datetime_instance):
-		return find_nearest(self,datetime_instance)
-
-	def closest_index(self,datetime_instance):
-		return self.index(self.closest_datetime(datetime_instance))
 
 	def days_since(self):
 		time_delta_list = [x-self.ref_date for x in self]

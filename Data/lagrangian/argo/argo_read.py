@@ -44,7 +44,10 @@ def data_return(data_instance):
 	-------
 	data processed in a usable form (string, array, float)
 	"""
-	data_type = data_instance.datatype
+	try:
+		data_type = data_instance.datatype
+	except AttributeError:
+		data_type = data_instance.dtype
 	masked_array = data_instance[:]
 	if data_type in ['S1','S']:
 		data = ''.join([_.decode("utf-8") for _ in masked_array[~masked_array.mask].data.ravel()])
@@ -208,6 +211,37 @@ class ArgoReader(BaseRead):
 			lon_list += [lon]
 		return (lat_list,lon_list)
 
+	def get_variables(self):
+		return ['PRES', 'TEMP', 'PSAL']
+
+	@staticmethod
+	def recent_bins_by_sensor(variable,lat_bins,lon_bins):
+		date_list = ArgoReader.get_recent_date_list()
+		bin_list = ArgoReader.get_recent_bins(lat_bins,lon_bins)
+		sensor_list = [['PRES', 'TEMP', 'PSAL'] for x in range(len(bin_list))]
+		sensor_mask = [variable in x for x in sensor_list]
+		date_mask =[max(date_list)-datetime.timedelta(days=180)<x for x in date_list]
+		mask = np.array(sensor_mask)&np.array(date_mask)
+		return np.array(bin_list)[mask]
+
+	@staticmethod
+	def compile_classes(num):
+		data_file_name = os.getenv("HOME")+'/Data/Raw/Argo'
+		def compile_matches():
+			matches = []
+			for root, dirnames, filenames in os.walk(data_file_name):
+				meta_match = re.compile('.*meta.nc') # all folders will have a meta file
+				if any([file.endswith('meta.nc') for file in filenames]):
+					matches.append(root)
+			return matches
+
+		matches = compile_matches()
+		number = 0
+		while number<len(matches[:num]):
+			print('I am opening number match ',number)
+			print ('filename is ',matches[number])
+			ArgoReader(matches[number])
+			number += 1 
 
 	class BaseReadClass(object):
 		pass
@@ -386,29 +420,23 @@ def aggregate_argo_list(read_class=ArgoReader,num=-1):
 	dictionary of argo read classes.
 	"""
 
-	all_dict_filename = os.getenv("HOME")+'/Data/Raw/Argo/all_dict'
+	all_dict_filename = os.getenv("HOME")+'/Data/Raw/Argo/all_dict_'+read_class.data_description
 	try: 
 		with open(all_dict_filename,'rb') as pickle_file:
 			out_data = pickle.load(pickle_file)
 			BaseRead.all_dict = out_data		
 	except FileNotFoundError:
-		data_file_name = os.getenv("HOME")+'/Data/Raw/Argo'
-		def compile_matches():
-			matches = []
-			for root, dirnames, filenames in os.walk(data_file_name):
-				meta_match = re.compile('.*meta.nc') # all folders will have a meta file
-				if any([file.endswith('meta.nc') for file in filenames]):
-					matches.append(root)
-			return matches
-
-		matches = compile_matches()
-
-		number = 0
-		while number<len(matches[:num]):
-			print('I am opening number match ',number)
-			print ('filename is ',matches[number])
-			read_class(matches[number])
-			number += 1 
+		read_class.compile_classes(num)
 		with open(all_dict_filename, 'wb') as pickle_file:
 			pickle.dump(BaseRead.all_dict,pickle_file)
 		pickle_file.close()
+
+def full_argo_list():
+	import copy
+	from GeneralUtilities.Data.lagrangian.bgc.bgc_read import BGCReader
+	aggregate_argo_list()
+	all_dict_holder = copy.deepcopy(BaseRead.all_dict)
+	aggregate_argo_list(read_class=BGCReader)
+	for float_num,float_class in BGCReader.all_dict.items():
+		all_dict_holder[float_num] = float_class
+	BaseRead.all_dict = all_dict_holder
