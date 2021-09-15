@@ -49,7 +49,7 @@ class BaseCartopy():
         else:
             self.ax = ax
 
-    def meshgrid(self):
+    def meshgrid_xx_yy(self):
         return np.meshgrid(self.lon_grid,self.lat_grid)
 
     def finish_map(self):
@@ -61,88 +61,10 @@ class BaseCartopy():
         gl.ylabels_right = False
 
     def get_map(self):
-        XX,YY = self.meshgrid()
+        XX,YY = self.meshgrid_xx_yy()
         return (XX,YY,self.ax)
 
-class SOSECartopy(BaseCartopy):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        print('I am plotting antarctic region')
-        llcrnrlon=-180.
-        llcrnrlat=-80.
-        urcrnrlon=180.
-        urcrnrlat=-25
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
-        self.finish_map()
 
-class CreteCartopy(BaseCartopy):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        print('I am plotting Crete')
-        llcrnrlon=20.
-        llcrnrlat=30
-        urcrnrlon=30
-        urcrnrlat=40
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
-        self.finish_map()
-
-class KonaCartopy(BaseCartopy):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        print('I am plotting Kona')
-        llcrnrlon=-157
-        llcrnrlat=18.8
-        urcrnrlon=-155.6
-        urcrnrlat=20.35
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
-        self.finish_map()
-
-class PuertoRicoCartopy(BaseCartopy):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        print('I am plotting Puerto Rico')
-        llcrnrlon=-68.5 
-        llcrnrlat=16
-        urcrnrlon=-65
-        urcrnrlat=22.5
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
-        self.finish_map()
-
-class MobyCartopy(BaseCartopy):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        print('I am plotting Moby')
-        center_lat = 20.8
-        center_lon = -157.2
-        llcrnrlon=(center_lon-3)
-        llcrnrlat=(center_lat-3)
-        urcrnrlon=(center_lon+3)
-        urcrnrlat=(center_lat+3)
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
-        self.ax.scatter(center_lon,center_lat,500,marker='*',color='Red',zorder=10)
-        self.finish_map()
-
-class GOMCartopy(BaseCartopy):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        print('I am plotting GOM')
-        llcrnrlon=-100.
-        llcrnrlat=20.5
-        urcrnrlon=-81.5
-        urcrnrlat=30.5
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())        
-        self.finish_map()
-
-class CCSCartopy(BaseCartopy):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        print('I am plotting GOM')
-        llcrnrlon=-135.
-        llcrnrlat=20
-        urcrnrlon=-105
-        urcrnrlat=55
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())        
-        self.finish_map()
 
 class GlobalCartopy(BaseCartopy):
     def __init__(self,*args,**kwargs):
@@ -185,3 +107,5 @@ class PointCartopy(BaseCartopy):
         urcrnrlat=(geopy_point.latitude+pad)
         self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
         self.finish_map()
+
+
