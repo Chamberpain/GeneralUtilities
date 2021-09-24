@@ -39,7 +39,7 @@ class DepthBase(object):
 		lons = np.arange(-180,180,0.1)
 		lats = np.arange(-90,90,0.1)
 		XX,YY = np.meshgrid(lons,lats)
-		return (lons,lats,griddata(np.array(zip(X[array_mask],Y[array_mask])),array[array_mask],(XX,YY)))
+		return (lons,lats,griddata(np.array(list(zip(X[array_mask],Y[array_mask]))),array[array_mask],(XX,YY)))
 
 	def return_z(self,pos):
 		x_index,y_index = self.get_index_from_pos(pos)

@@ -1,10 +1,9 @@
-from __future__ import print_function
-from data_save_utilities.depth.depth_utilities import DepthBase
+from GeneralUtilities.Data.depth.depth_utilities import DepthBase
 from netCDF4 import Dataset
 import os
 import numpy as np
-from compute_utilities.constants import degree_dist
-from data_save_utilities.file_path_utilities import get_base_folder
+from GeneralUtilities.Compute.constants import degree_dist
+from GeneralUtilities.Filepath.instance import get_base_folder
 
 class AVGAStream(DepthBase):
 	def __init__(self,depth_level=18):

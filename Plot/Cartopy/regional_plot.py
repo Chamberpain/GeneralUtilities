@@ -1,4 +1,5 @@
 from GeneralUtilities.Plot.Cartopy.eulerian_plot import BaseCartopy
+import cartopy.crs as ccrs
 
 class RegionalBase(BaseCartopy):
     def __init__(self,*args,**kwargs):
@@ -46,15 +47,14 @@ class PuertoRicoCartopy(RegionalBase):
         super().__init__(*args,**kwargs)
 
 class MobyCartopy(RegionalBase):
-    center_lat = 20.8
-    center_lon = -157.2
-    llcrnrlon=(self.center_lon-3)
-    llcrnrlat=(self.center_lat-3)
-    urcrnrlon=(self.center_lon+3)
-    urcrnrlat=(self.center_lat+3)
-
     def __init__(self,*args,**kwargs):
         print('I am plotting Moby')
+        center_lat = 20.8
+        center_lon = -157.2
+        self.llcrnrlon=(center_lon-3)
+        self.llcrnrlat=(center_lat-3)
+        self.urcrnrlon=(center_lon+3)
+        self.urcrnrlat=(center_lat+3)
         super().__init__(*args,**kwargs)
         self.ax.scatter(center_lon,center_lat,500,marker='*',color='Red',zorder=10)
 
@@ -77,10 +77,29 @@ class CCSCartopy(RegionalBase):
         super().__init__(*args,**kwargs)
 
 class DrakePassageCartopy(RegionalBase):
-    llcrnrlon=-130.
-    llcrnrlat=-70.
-    urcrnrlon=0.
-    urcrnrlat=-35.
+    llcrnrlon=-120.
+    llcrnrlat=-65.
+    urcrnrlon=-40.
+    urcrnrlat=-50.
     def __init__(self,*args,**kwargs):
-        print('I am plotting GOM')
+        print('I am plotting Drake Passage')
         super().__init__(*args,**kwargs)
+
+
+class WeddellSeaCartopy(RegionalBase):
+    llcrnrlon=-65.
+    llcrnrlat=-75.
+    urcrnrlon=20.
+    urcrnrlat=-60.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Weddell Sea')
+        super().__init__(*args,**kwargs)
+
+class TahitiCartopy(RegionalBase):
+    llcrnrlon=-152
+    llcrnrlat=-19
+    urcrnrlon=-148
+    urcrnrlat=-16
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Weddell Sea')
+        super().__init__(*args,**kwargs)    

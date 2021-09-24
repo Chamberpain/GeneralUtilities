@@ -4,11 +4,18 @@ import numpy as np
 
 
 def get_base_folder():
-	file_path = '/Users/pchamberlain/Data/'
-	if os.path.exists(file_path):
+	if os.path.exists('/Users/pchamberlain/Data/'):
+		file_path = '/Users/pchamberlain/Data/'
+		pass
+	elif os.path.exists('/Users/paulchamberlain/Data/'):
+		file_path = '/Users/paulchamberlain/Data/'
+		pass
+	elif os.path.exists('/home/pchamber/local_data/'):
+		file_path = '/home/pchamber/local_data/'
 		pass
 	else:
-		file_path = '/home/pchamber/local_data/'
+		print('The data folder could not be found')
+		raise
 	return file_path
 
 def does_file_exist(filename,mat):
