@@ -18,7 +18,7 @@ datadir = get_base_folder()+'Processed/eulerian_plot/basemap/'
 
 
 
-def ellipse(geod,lon, lat, b, a, n_samples=360,phi=0):
+def ellipse(self,geod,lon, lat, b, a, n_samples=360,phi=0):
 	"""
 	Return the coordinates of a geodetic ellipse of a given
 	x radius of a and y radius of b around a lon/lat point.
@@ -97,6 +97,7 @@ def bathy(self,color=plt.cm.Oranges,contour=False):
 
 cartopy.mpl.geoaxes.GeoAxesSubplot.streamline_plot = streamline_plot
 cartopy.mpl.geoaxes.GeoAxesSubplot.bathy = bathy
+cartopy.mpl.geoaxes.GeoAxesSubplot.ellipse = ellipse
 
 
 class BaseCartopy():

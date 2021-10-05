@@ -34,9 +34,6 @@ class KonaCartopy(RegionalBase):
         print('I am plotting Kona')
         super().__init__(*args,**kwargs)
 
-        self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
-        self.finish_map()
-
 class PuertoRicoCartopy(RegionalBase):
     llcrnrlon=-68.5 
     llcrnrlat=16
@@ -101,5 +98,5 @@ class TahitiCartopy(RegionalBase):
     urcrnrlon=-148
     urcrnrlat=-16
     def __init__(self,*args,**kwargs):
-        print('I am plotting Weddell Sea')
+        print('I am plotting Tahiti')
         super().__init__(*args,**kwargs)    

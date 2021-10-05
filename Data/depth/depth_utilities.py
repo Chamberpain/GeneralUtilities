@@ -3,100 +3,95 @@ from netCDF4 import Dataset
 import numpy as np 
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
-from GeneralUtilities.Compute.list import find_nearest
+from GeneralUtilities.Compute.list import LatList,LonList
 from GeneralUtilities.Compute.constants import degree_dist
 from scipy.interpolate import griddata
 from GeneralUtilities.Filepath.instance import get_base_folder
 import geopy
 
 class DepthBase(object):
-		
-	def get_index_from_pos(self,pos):
-		try: # this is for pos in LatLon form
-			dummy_x = pos.lon.decimal_degree
-			dummy_y = pos.lat.decimal_degree
-		except AttributeError:	#this is for pos in tuple form
-			pass
-		if pos.__class__  in [list,tuple]:
-			dummy_x = pos[1]
-			dummy_y = pos[0]
-		if pos.__class__ == geopy.point.Point:
-			x = pos.longitude
-			y = pos.latitude
-		assert dummy_x<=180
-		assert dummy_x>=-180
-		assert dummy_y<=90
-		assert dummy_y>=-90
-		nearest_x = find_nearest(self.x,dummy_x)
-		nearest_y = find_nearest(self.y,dummy_y)
-		x_index = self.x.tolist().index(nearest_x)
-		y_index = self.y.tolist().index(nearest_y)
-		return (x_index,y_index)	
+	def __init__(self,*args,lon=None,lat=None,z=None,dz_dy=None, dz_dx = None,**kwargs):
+		assert isinstance(lon,LonList)
+		assert isinstance(lat,LatList)
+		assert z.shape[1] == len(lon)
+		assert z.shape[0] == len(lat)
+		assert isinstance(z,np.ma.masked_array)
+		self.z = np.ma.masked_greater(z,0)
+		self.lat = lat
+		self.lon = lon
+		self.dz_dy = dz_dy
+		self.dz_dx = dz_dx
 
-	def calculate_subsample(self,array):
-		array_mask = ~np.isnan(array)
-		X,Y = np.meshgrid(self.x,self.y)
-		lons = np.arange(-180,180,0.1)
-		lats = np.arange(-90,90,0.1)
-		XX,YY = np.meshgrid(lons,lats)
-		return (lons,lats,griddata(np.array(list(zip(X[array_mask],Y[array_mask]))),array[array_mask],(XX,YY)))
+	def get_index_from_pos(self,pos):
+		isinstance(pos,geopy.Point)
+		lon_index = self.lon.find_nearest(pos.longitude)
+		lat_index = self.lat.find_nearest(pos.latitude)
+		return (lon_index,lat_index)	
 
 	def return_z(self,pos):
-		x_index,y_index = self.get_index_from_pos(pos)
-		return self.z[y_index,x_index]
+		lon_index,lat_index = self.get_index_from_pos(pos)
+		return self.z[lat_index,lon_index]
 
 	def return_gradient(self,pos):
 		x_index,y_index = self.get_index_from_pos(pos)
 		dz_dx = self.dz_dx/(np.cos(np.deg2rad(self.y[y_index])))
 		return (dz_dx[y_index,x_index],self.dz_dy[y_index,x_index])
 
-	def guassian_smooth(self,sigma=5):
-		self.z = gaussian_filter(self.z, sigma=sigma)
+	def get_gradient(self):
+		self.dz_dy,self.dz_dx = np.gradient(self.z.data,self.lat,self.lon)
 
-	def plot(self,coords=None):
-#need to switch to cartopy
-		if coords:
-			lllon,urlon,lllat,urlat = [find_nearest(_[0],_[1]) for _ in zip([self.x,self.x,self.y,self.y],coords)]
-			lllon_index,urlon_index,lllat_index,urlat_index = [_[0].tolist().index(_[1]) for _ in zip([self.x,self.x,self.y,self.y],[lllon,urlon,lllat,urlat])]
-			x = self.x[lllon_index:urlon_index]
-			y = self.y[urlat_index:lllat_index]
-			z = self.z[urlat_index:lllat_index,lllon_index:urlon_index]
-			XX,YY = np.meshgrid(x,y)
-			m = Basemap(projection='cea',llcrnrlat=lllat,urcrnrlat=urlat,\
-			llcrnrlon=lllon,urcrnrlon=urlon,resolution='l',lon_0=0,\
-			fix_aspect=False)			
-		else:
-			XX,YY = np.meshgrid(self.x[::10],self.y[::10])
-			z = self.z[::10,::10]
-			m = Basemap(projection='cea',llcrnrlat=-90,urcrnrlat=90,\
-			llcrnrlon=-180,urcrnrlon=180,resolution='l',lon_0=0,\
-			fix_aspect=False)
-		z = np.ma.masked_greater(z,-1000)
-		m.pcolormesh(XX,YY,z,latlon=True)
-		plt.colorbar()
-		plt.show()
+	def griddata_subsample(self,array):
+		array_mask = ~np.isnan(array)
+		X,Y = np.meshgrid(self.x,self.y)
+		lons = np.arange(-180,180,0.1)
+		lats = np.arange(-90,90,0.1)
+		XX,YY = np.meshgrid(lons,lats)
+		z = griddata(np.array(list(zip(X[array_mask],Y[array_mask]))),array[array_mask],(XX,YY))
+		return self.__class__(lon = lons,lat = lats,z=z)
+
+	def stride_subsample(self,stride):
+		lon = self.lon[::stride]
+		lat = self.lat[::stride]
+		z = self.z[::stride,::stride]
+		return self.__class__(lon=lon,lat=lat,z=z)
+
+	def guassian_smooth(self,sigma=5):
+		z = gaussian_filter(self.z, sigma=sigma)
+		return self.__class__(lon=self.lon,lat=self.lat,z=z)
+
+	def regional_subsample(self,urlon,lllon,urlat,lllat):
+		urlon_idx = self.lon.find_nearest(urlon,idx=True)
+		lllon_idx = self.lon.find_nearest(lllon,idx=True)
+		lllat_idx = self.lat.find_nearest(lllat,idx=True)
+		urlat_idx = self.lat.find_nearest(urlat,idx=True)
+		lon = self.lon[lllon_idx:(urlon_idx+1)]
+		lat = self.lat[lllat_idx:(urlat_idx+1)]
+		z = self.z[lllat_idx:(urlat_idx+1),lllon_idx:(urlon_idx+1)]
+		return self.__class__(lon=lon,lat=lat,z=z)
 
 class ETopo1Depth(DepthBase):
-	def __init__(self,stride=6):
-		base_folder = get_base_folder()
-		file_path = base_folder+'Raw/Bathymetry/ETOPO1_Bed_c_gdal.grd'
-		self.nc_fid = Dataset(file_path)
-		x_start,x_end = self.nc_fid['x_range'][:]
-		y_start,y_end = self.nc_fid['y_range'][:]
-		delta_x,delta_y = self.nc_fid['spacing'][:]
-		self.x = np.arange(x_start,x_end,delta_x)
-		self.y = np.arange(y_start,y_end,delta_y)[::-1]
-		self.z = self.nc_fid['z'][:].reshape(len(self.y),len(self.x))
-		self.x = self.x[::stride]
-		self.y = self.y[::stride]
-		self.z = self.z[::stride,::stride]
-		self.dz_dy,self.dz_dx = np.gradient(self.z.data,self.y,self.x)
+	def __init__(self,*args,**kwargs):
+		super().__init__(*args, **kwargs)
+
+	@staticmethod
+	def load():
+		nc_fid_z_data = Dataset(get_base_folder()+'Raw/Bathymetry/ETOPO1_Bed_c_gdal.grd')
+		nc_fid_coord = Dataset(get_base_folder()+'Raw/Bathymetry/ETOPO1_Bed_g_gmt4.grd')
+		lon = LonList(nc_fid_coord['x'][:-1])
+		lat = LatList(nc_fid_coord['y'][:-1])
+		z = nc_fid_z_data['z'][:].reshape(len(lat),len(lon))
+		z = z[::-1,:]
+		return ETopo1Depth(lon=lon,lat=lat,z=z)
 
 
 class PACIOOS(DepthBase):
-	def __init__(self):
-		file_path = '/Users/pchamberlain/Data/Raw/Bathymetry/hmrg_bathytopo_1km_mhi.nc'
-		self.nc_fid = Dataset(file_path)
-		self.x = self.nc_fid['x'][:]
-		self.y = self.nc_fid['y'][:]
-		self.z = self.nc_fid['z'][:]
+	def __init__(self,*args,**kwargs):
+		super().__init__(*args, **kwargs)
+
+	@staticmethod
+	def load():
+		nc_fid = Dataset(get_base_folder()+'Raw/Bathymetry/hmrg_bathytopo_1km_mhi.nc')
+		lon = LonList(nc_fid['x'][:])
+		lat = LatList(nc_fid['y'][:])
+		z = nc_fid['z'][:]
+		return PACIOOS(lon=lon,lat=lat,z=z)
