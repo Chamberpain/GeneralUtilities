@@ -2,6 +2,7 @@ from GeneralUtilities.Plot.Cartopy.eulerian_plot import BaseCartopy
 import cartopy.crs as ccrs
 
 class RegionalBase(BaseCartopy):
+# need to add class method to generate ax with center lon
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.ax.set_extent([self.llcrnrlon,self.urcrnrlon,self.llcrnrlat,self.urcrnrlat], crs=ccrs.PlateCarree())
@@ -99,4 +100,43 @@ class TahitiCartopy(RegionalBase):
     urcrnrlat=-16
     def __init__(self,*args,**kwargs):
         print('I am plotting Tahiti')
-        super().__init__(*args,**kwargs)    
+        super().__init__(*args,**kwargs)
+
+class NAtlanticCartopy(RegionalBase):
+    llcrnrlon=-80.
+    llcrnrlat=0.
+    urcrnrlon=20.
+    urcrnrlat=65.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting N Atlantic')
+        super().__init__(*args,**kwargs)
+
+class NPacificCartopy(RegionalBase):
+    llcrnrlon=120.
+    llcrnrlat=0.
+    urcrnrlon=260.
+    urcrnrlat=80.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting N Pacific')
+        super().__init__(*args,**kwargs)
+
+class SAtlanticCartopy(RegionalBase):
+    llcrnrlon=-80.
+    llcrnrlat=-60.
+    urcrnrlon=30.
+    urcrnrlat=0.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting S Atlantic')
+        super().__init__(*args,**kwargs)
+
+
+class SPacificCartopy(RegionalBase):
+    llcrnrlon=120.
+    llcrnrlat=-60.
+    urcrnrlon=280.
+    urcrnrlat=0.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting S Pacific')
+        super().__init__(*args,**kwargs)
+
+

@@ -50,7 +50,7 @@ def data_return(data_instance):
 		data_type = data_instance.dtype
 	masked_array = data_instance[:]
 	if data_type in ['S1','S']:
-		data = ''.join([_.decode("utf-8") for _ in masked_array[~masked_array.mask].data.ravel()])
+		data = ''.join([_.decode("utf-8",errors='ignore') for _ in masked_array[~masked_array.mask].data.ravel()])
 	elif data_type == 'float64':
 		data = [_ for _ in masked_array[~masked_array.mask].data.ravel()]
 		if len(data)==1:
@@ -158,7 +158,6 @@ class ArgoReader(BaseRead):
 	Class object of netcdf file data.
 	All lat/lon information formatted to -180 to 180
 	All times are returned as datetime objects
-
 	"""
 	data_description = 'argo'
 	def __init__(self,nc_folder,meta=True, traj= True, prof=True,tech=True):
@@ -271,6 +270,7 @@ class ArgoReader(BaseRead):
 			print('I am opening Meta File')
 			nc_fid = Dataset(file_path)
 			self.id = data_return(nc_fid['PLATFORM_NUMBER'])
+			self.project_name = data_return(nc_fid['PROJECT_NAME'])
 			self.date = self.Date(nc_fid)
 			self.positioning_system = self._positioning_system_format(nc_fid.variables['POSITIONING_SYSTEM'])
 			if bool(data_return(nc_fid.variables['LAUNCH_QC'])):
