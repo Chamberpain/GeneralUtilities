@@ -23,30 +23,45 @@ class DepthBase(object):
 		self.dz_dx = dz_dx
 
 	def get_index_from_pos(self,pos):
-		isinstance(pos,geopy.Point)
-		lon_index = self.lon.find_nearest(pos.longitude)
-		lat_index = self.lat.find_nearest(pos.latitude)
+		assert issubclass(pos.__class__,geopy.Point)
+		lon_index = self.lon.find_nearest(pos.longitude,idx=True)
+		lat_index = self.lat.find_nearest(pos.latitude,idx=True)
+		assert isinstance(lon_index,int)
+		assert isinstance(lat_index,int)
 		return (lon_index,lat_index)	
 
 	def return_z(self,pos):
 		lon_index,lat_index = self.get_index_from_pos(pos)
-		return self.z[lat_index,lon_index]
+		z = self.z[lat_index,lon_index]
+		try:
+			assert ~np.isnan(z)
+		except:
+			z = -999999
+		return z
 
 	def return_gradient(self,pos):
 		x_index,y_index = self.get_index_from_pos(pos)
-		dz_dx = self.dz_dx/(np.cos(np.deg2rad(self.y[y_index])))
-		return (dz_dx[y_index,x_index],self.dz_dy[y_index,x_index])
+		dz_dx = self.dz_dx[y_index,x_index]/(np.cos(np.deg2rad(pos.latitude)))
+		dz_dy = self.dz_dy[y_index,x_index]
+		assert ~np.isnan(dz_dx)
+		assert ~np.isnan(dz_dx)
+		return (dz_dx,dz_dy)
 
-	def get_gradient(self):
+	def get_gradient(self,km=True):
 		self.dz_dy,self.dz_dx = np.gradient(self.z.data,self.lat,self.lon)
+		if km:
+			self.dz_dx = self.dz_dx/degree_dist
+			self.dz_dy = self.dz_dy/degree_dist
 
 	def griddata_subsample(self,array):
 		array_mask = ~np.isnan(array)
-		X,Y = np.meshgrid(self.x,self.y)
-		lons = np.arange(-180,180,0.1)
-		lats = np.arange(-90,90,0.1)
+		X,Y = np.meshgrid(self.lon,self.lat)
+		lons = LonList(np.arange(-180,180,0.1))
+		lats = LatList(np.arange(-90,90,0.1))
 		XX,YY = np.meshgrid(lons,lats)
 		z = griddata(np.array(list(zip(X[array_mask],Y[array_mask]))),array[array_mask],(XX,YY))
+		z = np.ma.masked_array(z)
+		z[np.isnan(z)] = np.nanmin(z)*10
 		return self.__class__(lon = lons,lat = lats,z=z)
 
 	def stride_subsample(self,stride):
@@ -57,6 +72,7 @@ class DepthBase(object):
 
 	def guassian_smooth(self,sigma=5):
 		z = gaussian_filter(self.z, sigma=sigma)
+		z = np.ma.masked_array(z)
 		return self.__class__(lon=self.lon,lat=self.lat,z=z)
 
 	def regional_subsample(self,urlon,lllon,urlat,lllat):
@@ -73,25 +89,25 @@ class ETopo1Depth(DepthBase):
 	def __init__(self,*args,**kwargs):
 		super().__init__(*args, **kwargs)
 
-	@staticmethod
-	def load():
+	@classmethod
+	def load(cls):
 		nc_fid_z_data = Dataset(get_base_folder()+'Raw/Bathymetry/ETOPO1_Bed_c_gdal.grd')
 		nc_fid_coord = Dataset(get_base_folder()+'Raw/Bathymetry/ETOPO1_Bed_g_gmt4.grd')
 		lon = LonList(nc_fid_coord['x'][:-1])
 		lat = LatList(nc_fid_coord['y'][:-1])
 		z = nc_fid_z_data['z'][:].reshape(len(lat),len(lon))
 		z = z[::-1,:]
-		return ETopo1Depth(lon=lon,lat=lat,z=z)
+		return cls(lon=lon,lat=lat,z=z)
 
 
 class PACIOOS(DepthBase):
 	def __init__(self,*args,**kwargs):
 		super().__init__(*args, **kwargs)
 
-	@staticmethod
+	@classmethod
 	def load():
 		nc_fid = Dataset(get_base_folder()+'Raw/Bathymetry/hmrg_bathytopo_1km_mhi.nc')
 		lon = LonList(nc_fid['x'][:])
 		lat = LatList(nc_fid['y'][:])
 		z = nc_fid['z'][:]
-		return PACIOOS(lon=lon,lat=lat,z=z)
+		return cls(lon=lon,lat=lat,z=z)

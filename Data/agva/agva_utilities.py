@@ -4,9 +4,14 @@ import os
 import numpy as np
 from GeneralUtilities.Compute.constants import degree_dist
 from GeneralUtilities.Filepath.instance import get_base_folder
+from GeneralUtilities.Compute.list import LatList,LonList
 
 class AVGAStream(DepthBase):
-	def __init__(self,depth_level=18):
+	def __init__(self,*args,**kwargs):
+		super().__init__(*args, **kwargs)
+
+	@classmethod
+	def load(cls,depth_level=18):
 		#depth level 18 corresponds to 1000 meters
 		base_folder = get_base_folder()
 		file_path = base_folder+'Processed/AGVA/'
@@ -16,13 +21,14 @@ class AVGAStream(DepthBase):
 			nc_fid = Dataset(full_path)
 			data_list.append(nc_fid['geostrophic_streamfunction'][:,depth_level,:,:])
 		data = np.vstack(data_list)
-		self.z = np.nanmean(data,axis=0)
-		self.y = nc_fid['latitude'][:]
-		self.x = nc_fid['longitude'][:]
-		self.x[self.x>180] = self.x[self.x>180]-360
-		self.x,self.y,self.z = self.calculate_subsample(self.z)
-		self.z[np.isnan(self.z)] = np.nanmin(self.z)*10
+		z = np.nanmean(data,axis=0)
+		z = z-np.nanmax(z)
+		y = LatList(nc_fid['latitude'][:].tolist())
+		x = LonList(np.arange(-180,180).tolist())
 
-		dz_dy,dz_dx = np.gradient(self.z,self.y,self.x)
-		self.dz_dx = dz_dx/degree_dist
-		self.dz_dy = dz_dy/degree_dist
+		holder = np.zeros(z.shape)
+		holder[:,:180] = z[:,180:]
+		holder[:,180:] = z[:,:180]
+		z = np.ma.masked_array(holder)
+		z[np.isnan(z)] = np.nanmin(z)*10
+		return cls(lon=x,lat=y,z=z)
