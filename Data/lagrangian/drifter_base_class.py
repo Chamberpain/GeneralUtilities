@@ -146,6 +146,13 @@ class BaseRead(object):
 		return recent_date_list	
 
 	@staticmethod
+	def get_deployment_date_list():
+		recent_date_list = []
+		for x in BaseRead.all_dict.values():
+			recent_date_list+=[x.prof.date._list[0]]
+		return recent_date_list	
+
+	@staticmethod
 	def get_recent_bins(lat_bins,lon_bins):
 		bin_list = []
 		for x in BaseRead.all_dict.values():

@@ -84,15 +84,15 @@ def bathy(self,color=plt.cm.Oranges,contour=False):
 			(r_start+1.0, g_start+5*delta, b_start+5*delta)),
 	}
 	bathy = LinearSegmentedColormap('bathy', cdict)
-	depth = ETopo1Depth()
+	depth = ETopo1Depth.load()
 	plot_data = -depth.z/1000.
-	XX,YY = np.meshgrid(depth.x,depth.y)
-	levels = [0,1,2,3,4,5]
+	XX,YY = np.meshgrid(depth.lon,depth.lat)
+	levels = [0,1,2,3,4,5,6]
 	if not contour:
-		cf = self.contourf(XX,YY,plot_data,levels,cmap=bathy,animated=True,vmax=5,vmin=0)
+		cf = self.contourf(XX,YY,plot_data,levels,cmap=bathy,animated=True,vmax=6,vmin=0)
 		return cf
 	else:
-		self.contour(XX,YY,plot_data,cmap=plt.get_cmap('Greys'),alpha=.8,vmax=5,vmin=-2)
+		self.contour(XX,YY,plot_data,cmap=plt.get_cmap('Greys'),alpha=.8,vmax=6,vmin=-2)
 
 
 cartopy.mpl.geoaxes.GeoAxesSubplot.streamline_plot = streamline_plot

@@ -125,9 +125,9 @@ class TimeList(BaseList):
 	def set_ref_date(cls,ref_date):
 		cls.ref_date = ref_date
 
-	@staticmethod
-	def time_list_from_seconds(seconds_list):
-		return TimeList([TimeList.ref_date + datetime.timedelta(seconds=x) for x in seconds_list])
+	@classmethod
+	def time_list_from_seconds(cls,seconds_list):
+		return cls([cls.ref_date + datetime.timedelta(seconds=x) for x in seconds_list])
 
 	def days_since(self):
 		time_delta_list = [x-self.ref_date for x in self]

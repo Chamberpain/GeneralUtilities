@@ -87,8 +87,8 @@ class DrakePassageCartopy(RegionalBase):
 class WeddellSeaCartopy(RegionalBase):
     llcrnrlon=-65.
     llcrnrlat=-75.
-    urcrnrlon=20.
-    urcrnrlat=-60.
+    urcrnrlon=40.
+    urcrnrlat=-50.
     def __init__(self,*args,**kwargs):
         print('I am plotting Weddell Sea')
         super().__init__(*args,**kwargs)
