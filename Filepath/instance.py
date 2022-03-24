@@ -2,7 +2,6 @@ import os
 from datetime import date
 import numpy as np 
 
-
 def get_base_folder():
 	if os.path.exists('/Users/pchamberlain/Data/'):
 		file_path = '/Users/pchamberlain/Data/'
@@ -18,16 +17,6 @@ def get_base_folder():
 		raise
 	return file_path
 
-def does_file_exist(filename,mat):
-	if os.path.isfile(filename+'.npy'):
-		print(filename+'.npy')
-		print('does exist, I will not remake the covariance')
-		pass
-	else:
-		np.save(filename,mat)
-		print(filename+'.npy')
-		print('does not exist, I will make the covariance')
-
 class FilePathHandler(object):
 	def __init__(self,init_root_dir,filename):
 		pipeline_base = init_root_dir.replace('Utilities','Pipeline')
@@ -40,8 +29,7 @@ class FilePathHandler(object):
 
 		for dirs in [self._data,self._tmp,self._out,self._store]:
 			self.check_folder(dirs)
-				
-				
+						
 	def check_folder(self,folder):
 		CHECK_FOLDER = os.path.isdir(folder)
 		if not CHECK_FOLDER:
@@ -63,17 +51,3 @@ class FilePathHandler(object):
 
 	def data_file(self,filename):
 		return self.file_return(self._data,filename)
-
-
-# def return_day_filepath(self):
-# 	return date.today().strftime("%d-%m-%y")
-
-# class KalmanNameUtilities(NameUtilities):
-# 	project = 'kalman_smoother'
-
-# 	def __init__(self,subproject=None):
-# 		super().__init__(subproject = subproject)
-
-# 	def return_day_filepath(self):
-# 		today_string = super().return_day_filepath()
-# 		print(today_string)

@@ -5,6 +5,113 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import datetime
+
+def data_return(data_instance):
+	"""
+	Function reads in netcdf data instance and returns sensible data
+
+	Parameters
+	----------
+	data_instance: net cdf data instance
+	mask: specifies whether to mask the values or return fill value
+	Returns
+	-------
+	data processed in a usable form (string, array, float)
+	"""
+	try:
+		data_type = data_instance.datatype
+	except AttributeError:
+		data_type = data_instance.dtype
+	masked_array = data_instance[:]
+	if data_type in ['S1','S']:
+		data = ''.join([_.decode("utf-8",errors='ignore') for _ in masked_array[~masked_array.mask].data.ravel()])
+	elif data_type == 'float64':
+		data = [_ for _ in masked_array[~masked_array.mask].data.ravel()]
+		if len(data)==1:
+			data = data[0]
+	else: 
+		print(data_type)
+		print('I dont know what to do with this data')
+		raise
+	return data
+
+class BaseDate(object):
+	name = 'Date'
+
+	def julian_time_parse(self,array,reference_date):
+		time_instance = [reference_date +datetime.timedelta(days=_) for _ in array]
+		return time_instance
+
+	def parse_time(self,variable_instance,reference_date=None):
+		"""
+		Function parses a netcdf time related instance and returns a time instance
+
+		Parameters
+		----------
+		variable instance of the time you wish decyfered
+		reference date for juld 
+
+		Returns
+		-------
+		date time instance
+		"""
+
+		if variable_instance.conventions == 'YYYYMMDDHHMISS':
+			time_string = data_return(variable_instance)
+			if time_string: #this tests for an empty string
+				try:
+					time_instance = datetime.datetime.strptime(time_string,'%Y%m%d%H%M%S')
+				except ValueError:
+					time_instance = None
+			else:
+				time_instance=None
+		elif variable_instance.conventions == 'Relative julian days with decimal part (as parts of day)':
+			if not reference_date:
+				print('I need a reference date for Julian data')
+				raise
+			time_instance = julian_time_parse(data_return(variable_instance),reference_date)
+		else:
+			print(variable_instance.conventions)
+			print('I dont know what to do with this')
+			raise
+		return time_instance
+
+	def return_mask(self):
+		return self._mask
+
+	def is_problem(self):
+		"""
+		Returns boolean value to show that all the date tests have been passed.
+
+		Current tests:
+		All time differences are greater than 0
+		All profiles happen before today 
+		All profiles happen after the beginning of the argo program
+		The maximum time difference between profiles cannot be greater than 9 months
+
+		Returns
+		-------
+		Boolean value to show if this profile is a problem
+		"""
+
+		time_diff_list = [self._list[idx+1]-self._list[idx] for idx in range(len(self._list)-1)]
+		seconds_diff_list = [_.days*24+_.seconds/3600. for _ in time_diff_list]
+		test_1 = (np.array(seconds_diff_list)>0).all()	# make sure all time is going in the right direction
+		if not test_1:
+			print('time is not going in the right direction')
+		test_2 = ((np.array(self._list))<datetime.datetime.today()).all() # make sure all profiles happen before today
+		if not test_2:
+			print('a profile happened in the future')
+		test_3 = ((np.array(self._list))>datetime.datetime(1998,1,1)).all() # make sure all profiles are after beginning of argo program
+		if not test_2:
+			print('a profile happened before argo existed')
+		test_4 = ((np.array([_.days for _ in time_diff_list])<270)).all() # make sure maximum time difference between profiles is less than 9 months
+		if not test_2:
+			print('maximum time between profiles is greater than 270 days')
+		return ~(test_1&test_2&test_3&test_4)
+
+
 
 class BasePosition(object):
 	name = 'Position'
@@ -59,7 +166,7 @@ class BasePosition(object):
 		test_1 = (np.array(difference_list)<500).all()
 		if not test_1:
 			print('difference between positions is greater than 500 nm')				
-		test_2 = (np.array(difference_list)>0).all()
+		test_2 = sum(np.array(difference_list)==0)<3
 		if not test_2:
 			print('the difference in position is 0')
 			print(difference_list)
@@ -160,9 +267,19 @@ class BaseRead(object):
 		return bin_list
 
 	@staticmethod
+	def get_recent_pos():
+		pos_list = [x.prof.pos._list[-1] for x in BaseRead.all_dict.values()]
+		return pos_list
+
+	@staticmethod
 	def get_subsampled_float_dict(percent):
 		N = round(len(BaseRead.all_dict)*percent)
 		return dict(random.sample(BaseRead.all_dict.items(), N))
+
+	@staticmethod
+	def get_sensors():
+		sensor_list = [x.get_variables() for x in BaseRead.all_dict.values()]
+		return sensor_list
 
 class Speed():
 	""" class that allows dynamic logic of trajectory speed 

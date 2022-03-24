@@ -24,12 +24,6 @@ class BGCReader(ArgoReader):
 		return self.bgc_prof.variables
 
 	@staticmethod
-	def get_sensors():
-		sensor_list = [x.get_variables() for x in BGCReader.all_dict.values()]
-		return sensor_list
-
-
-	@staticmethod
 	def recent_bins_by_sensor(variable,lat_bins,lon_bins):
 		date_list = BGCReader.get_recent_date_list()
 		bin_list = BGCReader.get_recent_bins(lat_bins,lon_bins)
@@ -50,10 +44,8 @@ class BGCReader(ArgoReader):
 				file_list = root.split('/')
 				file_list[-2] = file_list[-2].split('_')[0]
 				argo_matches.append('/'.join(file_list))
-				try:
-					BGCReader(bgc_matches[-1],argo_matches[-1])
-				except:
-					continue
+				BGCReader(bgc_matches[-1],argo_matches[-1])
+
 
 	class BGCProfClass(ArgoReader.BaseReadClass):
 		""" class to organize all of read in profile net cdf data

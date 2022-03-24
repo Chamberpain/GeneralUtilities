@@ -3,10 +3,11 @@ import cartopy.crs as ccrs
 
 class RegionalBase(BaseCartopy):
 # need to add class method to generate ax with center lon
-    def __init__(self,*args,**kwargs):
+    central_longitude=0
+    def __init__(self,*args,adjustable=False,**kwargs):
         super().__init__(*args,**kwargs)
         self.ax.set_extent([self.llcrnrlon,self.urcrnrlon,self.llcrnrlat,self.urcrnrlat], crs=ccrs.PlateCarree())
-        self.finish_map()
+        self.finish_map(adjustable=adjustable)
 
 class SOSECartopy(RegionalBase):
     llcrnrlon=-180.
@@ -18,10 +19,10 @@ class SOSECartopy(RegionalBase):
         super().__init__(*args,**kwargs)
 
 class CreteCartopy(RegionalBase):
-    llcrnrlon=20.
-    llcrnrlat=30
-    urcrnrlon=30
-    urcrnrlat=40
+    llcrnrlon=22.5
+    llcrnrlat=33
+    urcrnrlon=28.5
+    urcrnrlat=38
     def __init__(self,*args,**kwargs):
         print('I am plotting Crete')
         super().__init__(*args,**kwargs)
@@ -103,10 +104,10 @@ class TahitiCartopy(RegionalBase):
         super().__init__(*args,**kwargs)
 
 class NAtlanticCartopy(RegionalBase):
-    llcrnrlon=-80.
-    llcrnrlat=0.
-    urcrnrlon=20.
-    urcrnrlat=65.
+    llcrnrlon=-90.
+    llcrnrlat=15.
+    urcrnrlon=5.
+    urcrnrlat=85.
     def __init__(self,*args,**kwargs):
         print('I am plotting N Atlantic')
         super().__init__(*args,**kwargs)
@@ -139,4 +140,30 @@ class SPacificCartopy(RegionalBase):
         print('I am plotting S Pacific')
         super().__init__(*args,**kwargs)
 
+class PacificCartopy(RegionalBase):
+    llcrnrlon=130.
+    llcrnrlat=-20.
+    urcrnrlon=270.
+    urcrnrlat=45.
+    projection=ccrs.PlateCarree(central_longitude=180)
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Pacific')
+        super().__init__(*args,**kwargs)
 
+class AtlanticCartopy(RegionalBase):
+    llcrnrlon=-80.
+    llcrnrlat=-40.
+    urcrnrlon=20.
+    urcrnrlat=80.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Atlantic')
+        super().__init__(*args,**kwargs)
+
+class SouthernOceanCartopy(RegionalBase):
+    llcrnrlon=-180.
+    llcrnrlat=-90.
+    urcrnrlon=180.
+    urcrnrlat=-30.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Southern Ocean')
+        super().__init__(*args,**kwargs)

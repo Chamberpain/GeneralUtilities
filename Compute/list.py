@@ -20,27 +20,21 @@ class BaseList(list):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)	
 
-	def __getslice__(self,i,j):
-		return self.__class__(list.__getslice__(self, i, j))
-
-	def __add__(self, rhs):
-		return self.__class__(list.__add__(self, rhs))
-
-	def __getitem__(self, item):
-		result = list.__getitem__(self, item)
-		try:
-			return self.__class__(result)
-		except TypeError:
-			return result
-
-	def __getslice__(self,i,j):
-		return self.__class__(list.__getslice__(self, i, j))
-
 	def __add__(self,other):
 		return self.__class__(list.__add__(self,other))
 
 	def __mul__(self,other):
 		return self.__class__(list.__mul__(self,other))
+
+	def __getslice__(self, start, stop):
+		return self.__class__(list.__getslice__(start, stop))
+
+	def __getitem__(self, item):
+		result = list.__getitem__(self, item)
+		if type(item) is slice:
+			return self.__class__(result)
+		else:
+			return result
 
 	def find_nearest(self,value,test = True, idx = False):
 		if idx:
@@ -83,7 +77,8 @@ class GeoList(BaseList):
 	def __init__(self, *args, lat_sep=None, lon_sep=None,**kwargs):
 		super().__init__(*args, **kwargs)
 		# total list must be composed of geopy.Points 
-		assert all([isinstance(x,geopy.Point) for x in self]) 
+		if isinstance(self,GeoList):
+			assert all([isinstance(x,geopy.Point) for x in self]) 
 		self.lat_sep = lat_sep
 		self.lon_sep = lon_sep
 
@@ -116,6 +111,11 @@ class GeoList(BaseList):
 		lats,lons = np.meshgrid(new_lats,new_lons)
 		return list(zip(lats.flatten(),lons.flatten()))
 
+	def to_shapely(self):
+		import shapely.geometry
+		import geopandas as gp
+		return gp.GeoSeries([shapely.geometry.Point(x.longitude,x.latitude) for x in self])
+
 class TimeList(BaseList):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -129,9 +129,27 @@ class TimeList(BaseList):
 	def time_list_from_seconds(cls,seconds_list):
 		return cls([cls.ref_date + datetime.timedelta(seconds=x) for x in seconds_list])
 
+	@classmethod
+	def time_list_from_minutes(cls,minutes_list):
+		return cls([cls.ref_date + datetime.timedelta(minutes=x) for x in minutes_list])
+
+	@classmethod
+	def time_list_from_hours(cls,hours_list):
+		return cls([cls.ref_date + datetime.timedelta(hours=x) for x in hours_list])
+
+	@classmethod
+	def time_list_from_days(cls,days_list):
+		return cls([cls.ref_date + datetime.timedelta(days=x) for x in days_list])
+
 	def days_since(self):
 		time_delta_list = [x-self.ref_date for x in self]
 		return [x.days for x in time_delta_list]
+
+	def hours_since(self):
+		hours_in_day = 24
+		seconds_in_hour = 3600
+		time_delta_list = [x-self.ref_date for x in self]
+		return [x.days*hours_in_day+x.seconds*seconds_in_hour for x in time_delta_list]
 
 	def seconds_since(self):
 		seconds_in_day = 24*60*60

@@ -9,7 +9,7 @@ def find_files(data_directory,fmt,function=str):
 		for filename in fnmatch.filter(filenames,fmt):
 			matches.append(os.path.join(root, filename))
 	for n, match in enumerate(matches):
-		print('file is ',match,', there are ',len(matches[:])-n,'floats left')
+		print('file is ',match,', there are ',len(matches[:])-n,'files left')
 		t = time.time()
 		frames.append(function(match))
 		print('Building and merging datasets took ', time.time()-t)

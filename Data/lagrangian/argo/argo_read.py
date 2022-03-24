@@ -6,7 +6,7 @@ import geopy
 import re
 import numpy as np 
 import geopy.distance
-from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead
+from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead,BaseDate,data_return
 from GeneralUtilities.Data.pickle_utilities import load,save
 from GeneralUtilities.Filepath.instance import FilePathHandler
 import pickle
@@ -32,112 +32,11 @@ def data_adjust(data_instance, data_adjusted_instance):
 	masked_data_array = np.ma.masked_equal(masked_data_array,data_instance._FillValue)
 	return masked_data_array
 
-def data_return(data_instance):
-	"""
-	Function reads in netcdf data instance and returns sensible data
 
-	Parameters
-	----------
-	data_instance: net cdf data instance
-	mask: specifies whether to mask the values or return fill value
-	Returns
-	-------
-	data processed in a usable form (string, array, float)
-	"""
-	try:
-		data_type = data_instance.datatype
-	except AttributeError:
-		data_type = data_instance.dtype
-	masked_array = data_instance[:]
-	if data_type in ['S1','S']:
-		data = ''.join([_.decode("utf-8",errors='ignore') for _ in masked_array[~masked_array.mask].data.ravel()])
-	elif data_type == 'float64':
-		data = [_ for _ in masked_array[~masked_array.mask].data.ravel()]
-		if len(data)==1:
-			data = data[0]
-	else: 
-		print(data_type)
-		print('I dont know what to do with this data')
-		raise
-	return data
 
 def format_byte_list_to_string(byte_list):
 	return ['None' if x is None else x.decode("utf-8") for x in byte_list]
 
-class BaseDate(object):
-	name = 'Date'
-
-	def julian_time_parse(self,array,reference_date):
-		time_instance = [reference_date +datetime.timedelta(days=_) for _ in array]
-		return time_instance
-
-	def parse_time(self,variable_instance,reference_date=None):
-		"""
-		Function parses a netcdf time related instance and returns a time instance
-
-		Parameters
-		----------
-		variable instance of the time you wish decyfered
-		reference date for juld 
-
-		Returns
-		-------
-		date time instance
-		"""
-
-		if variable_instance.conventions == 'YYYYMMDDHHMISS':
-			time_string = data_return(variable_instance)
-			if time_string: #this tests for an empty string
-				try:
-					time_instance = datetime.datetime.strptime(time_string,'%Y%m%d%H%M%S')
-				except ValueError:
-					time_instance = None
-			else:
-				time_instance=None
-		elif variable_instance.conventions == 'Relative julian days with decimal part (as parts of day)':
-			if not reference_date:
-				print('I need a reference date for Julian data')
-				raise
-			time_instance = julian_time_parse(data_return(variable_instance),reference_date)
-		else:
-			print(variable_instance.conventions)
-			print('I dont know what to do with this')
-			raise
-		return time_instance
-
-	def return_mask(self):
-		return self._mask
-
-	def is_problem(self):
-		"""
-		Returns boolean value to show that all the date tests have been passed.
-
-		Current tests:
-		All time differences are greater than 0
-		All profiles happen before today 
-		All profiles happen after the beginning of the argo program
-		The maximum time difference between profiles cannot be greater than 9 months
-
-		Returns
-		-------
-		Boolean value to show if this profile is a problem
-		"""
-
-		time_diff_list = [self._list[idx+1]-self._list[idx] for idx in range(len(self._list)-1)]
-		seconds_diff_list = [_.days*24+_.seconds/3600. for _ in time_diff_list]
-		test_1 = (np.array(seconds_diff_list)>0).all()	# make sure all time is going in the right direction
-		if not test_1:
-			print('time is not going in the right direction')
-		test_2 = ((np.array(self._list))<datetime.datetime.today()).all() # make sure all profiles happen before today
-		if not test_2:
-			print('a profile happened in the future')
-		test_3 = ((np.array(self._list))>datetime.datetime(1998,1,1)).all() # make sure all profiles are after beginning of argo program
-		if not test_2:
-			print('a profile happened before argo existed')
-		test_4 = ((np.array([_.days for _ in time_diff_list])<270)).all() # make sure maximum time difference between profiles is less than 9 months
-		if not test_2:
-			print('maximum time between profiles is greater than 270 days')
-		return ~(test_1&test_2&test_3&test_4)
 
 
 class ArgoReader(BaseRead):
@@ -225,6 +124,7 @@ class ArgoReader(BaseRead):
 
 	@staticmethod
 	def compile_classes(num):
+		#this should probably use the find files function in search utility
 		data_file_name = os.getenv("HOME")+'/Data/Raw/Argo'
 		def compile_matches():
 			matches = []
@@ -293,7 +193,7 @@ class ArgoReader(BaseRead):
 			positioning_string = data_return(data_instance)
 			if not positioning_string:
 				return None
-			if positioning_string in ['IRIDIUM','GTS','GPSIRIDIUM','IRIDIUMGPS','GPSIRIDIUMRAFOS']:
+			if positioning_string in ['IRIDIUM','GTS','GPSIRIDIUM','IRIDIUMGPS','GPSIRIDIUMRAFOS','BEIDOU']:
 				positioning_string = 'GPS'
 			assert positioning_string in ['ARGOS','GPS']
 			return positioning_string
@@ -398,10 +298,10 @@ class ArgoReader(BaseRead):
 				print(self._list)
 				if not self._list:
 					return False
-				test_1 = (np.array(self._list)>500).all()	# allow a window of 500 on either side of drift depth
+				test_1 = sum(np.array(self._list)<500)<3	# allow a window of 500 on either side of drift depth
 				if not test_1:
 					print('drift depth less than 500 mb')
-				test_2 = (np.array(self._list)<1500).all() # 
+				test_2 = sum(np.array(self._list)>1500)<3 # 
 				if not test_2:
 					print('drift depth greater than 1500 mb')
 				return ~(test_1&test_2)

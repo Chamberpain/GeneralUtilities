@@ -101,7 +101,8 @@ cartopy.mpl.geoaxes.GeoAxesSubplot.ellipse = ellipse
 
 
 class BaseCartopy():
-	def __init__(self,lat_grid=np.arange(-90,90.1),lon_grid=np.arange(-180,180),ax=False,projection=ccrs.PlateCarree()):
+	projection=ccrs.PlateCarree()
+	def __init__(self,lat_grid=np.arange(-90,90.1),lon_grid=np.arange(-180,180),ax=False):
 		assert max(lat_grid)<=90
 		assert min(lat_grid)>=-90
 		assert max(lon_grid)<=180
@@ -112,17 +113,20 @@ class BaseCartopy():
 
 		if not ax:
 			fig = plt.figure()
-			self.ax = fig.add_subplot(1, 1, 1, projection=projection)
+			self.ax = fig.add_subplot(1, 1, 1, projection=self.projection)
 		else:
 			self.ax = ax
 
 	def meshgrid_xx_yy(self):
 		return np.meshgrid(self.lon_grid,self.lat_grid)
 
-	def finish_map(self):
+	def finish_map(self,adjustable=False):
 		self.ax.add_feature(cfeature.LAND,zorder=10)
 		self.ax.add_feature(cfeature.COASTLINE,zorder=10)
-		self.ax.set_aspect('auto')
+		if adjustable:
+			self.ax.set_adjustable('datalim')
+		else:
+			self.ax.set_aspect('equal')
 		gl = self.ax.gridlines(draw_labels=True)
 		gl.xlabels_top = False
 		gl.ylabels_right = False
