@@ -1,21 +1,11 @@
 import os
 from datetime import date
 import numpy as np 
+from GeneralUtilities.__init__ import ROOT_DIR
+
 
 def get_base_folder():
-	if os.path.exists('/Users/pchamberlain/Data/'):
-		file_path = '/Users/pchamberlain/Data/'
-		pass
-	elif os.path.exists('/Users/paulchamberlain/Data/'):
-		file_path = '/Users/paulchamberlain/Data/'
-		pass
-	elif os.path.exists('/home/pchamber/local_data/'):
-		file_path = '/home/pchamber/local_data/'
-		pass
-	else:
-		print('The data folder could not be found')
-		raise
-	return file_path
+	return os.path.join(ROOT_DIR,'DataDir')
 
 class FilePathHandler(object):
 	def __init__(self,init_root_dir,filename):
