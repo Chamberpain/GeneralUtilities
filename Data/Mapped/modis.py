@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import datetime
 from TransitionMatrix.Utilities.Utilities import shiftgrid
-datadir = os.path.join(ROOT_DIR,'DataDir/Processed/MODIS/')[1:]
+from GeneralUtilities.Data.Download.modis_download import data_folder as datadir
 
 class MODIS(MappedBase):
 

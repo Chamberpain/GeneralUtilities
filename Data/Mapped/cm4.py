@@ -8,8 +8,7 @@ import os
 import numpy as np
 from netCDF4 import Dataset
 from TransitionMatrix.Utilities.Utilities import shiftgrid
-
-datadir = os.path.join(ROOT_DIR,'DataDir/Processed/CM4')[1:]
+from GeneralUtilities.Data.Download.cm4_download import data_folder as datadir
 
 class CM4(MappedBase):
 

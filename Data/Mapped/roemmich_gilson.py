@@ -5,7 +5,7 @@ from netCDF4 import Dataset
 import os
 import matplotlib.pyplot as plt
 from TransitionMatrix.Utilities.Utilities import shiftgrid
-datadir = os.path.join(ROOT_DIR,'DataDir/Processed/RoemmichGilson')[1:]
+from GeneralUtilities.Data.Download.roemmich_gilson_download import data_folder as datadir
 
 class RoemmichGilsonSal(MappedBase):
 

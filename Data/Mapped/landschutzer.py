@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from TransitionMatrix.Utilities.Utilities import shiftgrid
 import datetime
 import numpy as np
-datadir = os.path.join(ROOT_DIR,'DataDir/Processed/Landschutzer')[1:]
+from GeneralUtilities.Data.Download.landschutzer_download import data_folder as datadir
 
 class Landschutzer(MappedBase):
 
