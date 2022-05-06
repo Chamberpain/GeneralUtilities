@@ -4,8 +4,17 @@ import numpy as np
 from GeneralUtilities.__init__ import ROOT_DIR
 
 
-def get_base_folder():
+def get_data_folder():
 	return os.path.join(ROOT_DIR,'DataDir')
+
+def make_folder_if_does_not_exist(folder_path):
+	print('working on '+folder_path)
+	if not os.path.exists(folder_path):
+		os.makedirs(folder_path)
+		print("The new directory is created!")		
+	else:
+		print("The directory already exists")	
+
 
 class FilePathHandler(object):
 	def __init__(self,init_root_dir,filename):

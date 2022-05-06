@@ -91,8 +91,8 @@ class ETopo1Depth(DepthBase):
 
 	@classmethod
 	def load(cls):
-		nc_fid_z_data = Dataset(get_base_folder()+'Raw/Bathymetry/ETOPO1_Bed_c_gdal.grd')
-		nc_fid_coord = Dataset(get_base_folder()+'Raw/Bathymetry/ETOPO1_Bed_g_gmt4.grd')
+		nc_fid_z_data = Dataset(get_base_folder()+'/Raw/Bathymetry/ETOPO1_Bed_c_gdal.grd')
+		nc_fid_coord = Dataset(get_base_folder()+'/Raw/Bathymetry/ETOPO1_Bed_g_gmt4.grd')
 		lon = LonList(nc_fid_coord['x'][:-1])
 		lat = LatList(nc_fid_coord['y'][:-1])
 		z = nc_fid_z_data['z'][:].reshape(len(lat),len(lon))
@@ -106,7 +106,7 @@ class PACIOOS(DepthBase):
 
 	@classmethod
 	def load():
-		nc_fid = Dataset(get_base_folder()+'Raw/Bathymetry/hmrg_bathytopo_1km_mhi.nc')
+		nc_fid = Dataset(get_base_folder()+'/Raw/Bathymetry/hmrg_bathytopo_1km_mhi.nc')
 		lon = LonList(nc_fid['x'][:])
 		lat = LatList(nc_fid['y'][:])
 		z = nc_fid['z'][:]

@@ -121,8 +121,8 @@ class BaseCartopy():
 		return np.meshgrid(self.lon_grid,self.lat_grid)
 
 	def finish_map(self,adjustable=False):
-		self.ax.add_feature(cfeature.LAND,zorder=10)
-		self.ax.add_feature(cfeature.COASTLINE,zorder=10)
+		self.ax.add_feature(cfeature.LAND)
+		self.ax.add_feature(cfeature.COASTLINE)
 		if adjustable:
 			self.ax.set_adjustable('datalim')
 		else:
@@ -136,7 +136,7 @@ class BaseCartopy():
 		return (XX,YY,self.ax)
 
 class GlobalCartopy(BaseCartopy):
-	def __init__(self,*args,**kwargs):
+	def __init__(self,*args,adjustable=False,**kwargs):
 		super().__init__(*args,**kwargs)      
 		print('I am plotting global region')
 		llcrnrlon=-180.
@@ -144,7 +144,7 @@ class GlobalCartopy(BaseCartopy):
 		urcrnrlon=180.
 		urcrnrlat=80
 		self.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat], crs=ccrs.PlateCarree())
-		self.finish_map()
+		self.finish_map(adjustable=adjustable)
 
 class HypernavCartopy(BaseCartopy):
 	def __init__(self,nc,float_pos_dict,*args,pad=1,**kwargs):

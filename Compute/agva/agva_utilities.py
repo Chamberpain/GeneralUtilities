@@ -14,7 +14,7 @@ class AVGAStream(DepthBase):
 	def load(cls,depth_level=18):
 		#depth level 18 corresponds to 1000 meters
 		base_folder = get_base_folder()
-		file_path = base_folder+'Processed/AGVA/'
+		file_path = base_folder+'/Processed/AGVA/'
 		data_list = []
 		for file in os.listdir(file_path):
 			full_path = os.path.join(file_path,file)

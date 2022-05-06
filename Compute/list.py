@@ -2,7 +2,8 @@ from __future__ import print_function
 import datetime
 import numpy as np
 import geopy
-
+import shapely.geometry
+import geopandas as gp
 
 
 def flat_list(non_flat_list):
@@ -55,6 +56,7 @@ class DepthList(BaseList):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		assert max(self)<=0
+		assert min(self)>=-10984 # depth of marianas trench
 
 class LonList(BaseList):
 	def __init__(self, *args, **kwargs):
@@ -112,8 +114,6 @@ class GeoList(BaseList):
 		return list(zip(lats.flatten(),lons.flatten()))
 
 	def to_shapely(self):
-		import shapely.geometry
-		import geopandas as gp
 		return gp.GeoSeries([shapely.geometry.Point(x.longitude,x.latitude) for x in self])
 
 class TimeList(BaseList):

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import datetime
+from GeneralUtilities.Compute.list import GeoList
 
 def data_return(data_instance):
 	"""
@@ -270,6 +271,15 @@ class BaseRead(object):
 	def get_recent_pos():
 		pos_list = [x.prof.pos._list[-1] for x in BaseRead.all_dict.values()]
 		return pos_list
+
+	@staticmethod
+	def get_floats_in_box(shape):
+		float_name_list = []
+		for dummy_float in BaseRead.all_dict.values():
+			truth_list = [shape.contains(x) for x in GeoList(dummy_float.prof.pos._list).to_shapely()]
+			if any(truth_list):
+				float_name_list.append(dummy_float.meta.id)
+		return float_name_list
 
 	@staticmethod
 	def get_subsampled_float_dict(percent):
