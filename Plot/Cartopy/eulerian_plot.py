@@ -9,8 +9,8 @@ import cartopy.mpl.geoaxes
 import scipy
 from matplotlib.colors import LinearSegmentedColormap
 import pickle
-from GeneralUtilities.Data.depth.depth_utilities import ETopo1Depth
-from GeneralUtilities.Filepath.instance import get_base_folder
+from GeneralUtilities.Compute.Depth.depth_utilities import ETopo1Depth
+from GeneralUtilities.Data.Filepath.instance import get_data_folder as get_base_folder
 
 
 datadir = get_base_folder()+'Processed/eulerian_plot/basemap/'

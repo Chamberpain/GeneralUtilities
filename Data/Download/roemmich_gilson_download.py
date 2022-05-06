@@ -13,9 +13,9 @@ def download():
 	for url in urls:
 		filenamegz = url.split("/")[-1]
 		filename = ".".join(filenamegz.split(".")[:2])
-		execute_download(url,filename,data_folder,verify=False)
-		os.rename(os.path.join(data_folder,filename),os.path.join(data_folder,filenamegz))
-		with gzip.open(os.path.join(data_folder,filenamegz), 'rb') as f_in:
-		    with open(os.path.join(data_folder,filename), 'wb') as f_out:
-		        shutil.copyfileobj(f_in, f_out)	
-		os.remove(os.path.join(data_folder,filenamegz))
+		if execute_download(url,filename,data_folder,verify=False):
+			os.rename(os.path.join(data_folder,filename),os.path.join(data_folder,filenamegz))
+			with gzip.open(os.path.join(data_folder,filenamegz), 'rb') as f_in:
+			    with open(os.path.join(data_folder,filename), 'wb') as f_out:
+			        shutil.copyfileobj(f_in, f_out)	
+			os.remove(os.path.join(data_folder,filenamegz))

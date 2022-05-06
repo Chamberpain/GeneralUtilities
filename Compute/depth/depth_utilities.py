@@ -6,7 +6,7 @@ from scipy.ndimage import gaussian_filter
 from GeneralUtilities.Compute.list import LatList,LonList
 from GeneralUtilities.Compute.constants import degree_dist
 from scipy.interpolate import griddata
-from GeneralUtilities.Filepath.instance import get_base_folder
+from GeneralUtilities.Data.Filepath.instance import get_data_folder as get_base_folder
 import geopy
 
 class DepthBase(object):

@@ -8,8 +8,10 @@ def execute_download(url,filename,data_folder,verify=True):
 	if os.path.exists(filepath):
 		print(filepath+' already exists, no download needed')
 		pass
+		return False
 	else:
 		print(filepath+' does not exist, downloading...')
 		with open(filepath, "wb") as f:
-		    r = requests.get(url,verify=verify)
-		    f.write(r.content)
+			r = requests.get(url,verify=verify)
+			f.write(r.content)
+		return True
