@@ -8,7 +8,7 @@ import numpy as np
 import geopy.distance
 from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead,BaseDate,data_return
 from GeneralUtilities.Data.pickle_utilities import load,save
-from GeneralUtilities.Filepath.instance import FilePathHandler
+from GeneralUtilities.Data.Filepath.instance import FilePathHandler
 import pickle
 
 
@@ -98,6 +98,13 @@ class ArgoReader(BaseRead):
 		for ii in ArgoReader.all_dict.values():
 			pos_list.append(ii.meta.positioning_system)
 		return pos_list
+
+	@staticmethod
+	def get_id_list():
+		id_list = []
+		for ii in ArgoReader.all_dict.values():
+			id_list.append(ii.meta.id)
+		return id_list
 
 	@staticmethod
 	def get_full_lat_lon_list():

@@ -9,7 +9,7 @@ import numpy as np
 import geopy.distance
 from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead
 from GeneralUtilities.Data.pickle_utilities import load,save
-from GeneralUtilities.Filepath.instance import FilePathHandler
+from GeneralUtilities.Data.Filepath.instance import FilePathHandler
 import pickle
 
 class BGCReader(ArgoReader):
