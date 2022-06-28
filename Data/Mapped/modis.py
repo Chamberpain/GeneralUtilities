@@ -1,4 +1,4 @@
-from GeneralUtilities.Data.mapped.mapped_base import MappedBase
+from GeneralUtilities.Data.Mapped.mapped_base import MappedBase
 from GeneralUtilities.Compute.list import LonList, LatList
 from GeneralUtilities.__init__ import ROOT_DIR
 from netCDF4 import Dataset
@@ -12,7 +12,7 @@ from GeneralUtilities.Data.Download.modis_download import data_folder as datadir
 class MODIS(MappedBase):
 
 	def return_dimensions(self):
-		filename = datadir+'/GMIS_A_CHLA_01_2003.nc'
+		filename = datadir+'GMIS_A_CHLA_01_2003.nc'
 		nc_fid = Dataset(filename)
 		lons = nc_fid['lon'][:][::4]
 		lats = nc_fid['lat'][:][::4]

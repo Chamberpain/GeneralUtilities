@@ -3,7 +3,6 @@ import datetime
 import numpy as np
 import geopy
 import shapely.geometry
-import geopandas as gp
 
 
 def flat_list(non_flat_list):
@@ -114,6 +113,7 @@ class GeoList(BaseList):
 		return list(zip(lats.flatten(),lons.flatten()))
 
 	def to_shapely(self):
+		import geopandas as gp
 		return gp.GeoSeries([shapely.geometry.Point(x.longitude,x.latitude) for x in self])
 
 class TimeList(BaseList):

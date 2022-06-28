@@ -1,8 +1,6 @@
-from GeneralUtilities.Data.Filepath.instance import get_data_folder
 from GeneralUtilities.Data.Download.download_utilities import execute_download
 import os
-data_folder = os.path.join(get_data_folder(),'Processed/CM4/')
-
+from OptimalArray.Utilities.CM4Mat import CovCM4
 
 
 def download():
@@ -14,4 +12,4 @@ def download():
 		for var in var_list:
 			url = 'http://esgdata.gfdl.noaa.gov/thredds/fileServer/gfdl_dataroot4/CMIP/NOAA-GFDL/GFDL-CM4/historical/r1i1p1f1/Omon/%s/gr/v20180701/%s_Omon_GFDL-CM4_historical_r1i1p1f1_gr_%6d-%6d.nc' % (var,var,start_date,end_date) 
 			filename = url.split("/")[-1]
-			execute_download(url,filename,data_folder)
+			execute_download(url,filename,CovCM4.data_directory)

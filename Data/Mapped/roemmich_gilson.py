@@ -1,4 +1,4 @@
-from GeneralUtilities.Data.mapped.mapped_base import MappedBase
+from GeneralUtilities.Data.Mapped.mapped_base import MappedBase
 from GeneralUtilities.Compute.list import LonList, LatList
 from GeneralUtilities.__init__ import ROOT_DIR
 from netCDF4 import Dataset

@@ -1,5 +1,5 @@
 from OptimalArray.Utilities.CM4Mat import CovCM4Global
-from GeneralUtilities.Data.mapped.mapped_base import MappedBase
+from GeneralUtilities.Data.Mapped.mapped_base import MappedBase
 from GeneralUtilities.Compute.list import LonList, LatList
 from GeneralUtilities.__init__ import ROOT_DIR
 import matplotlib.pyplot as plt
@@ -8,22 +8,24 @@ import os
 import numpy as np
 from netCDF4 import Dataset
 from TransitionMatrix.Utilities.Utilities import shiftgrid
-from GeneralUtilities.Data.Download.cm4_download import data_folder as datadir
+from OptimalArray.Utilities.CM4Mat import CovCM4
+
+datadir = CovCM4.data_directory
 
 class CM4(MappedBase):
 
 	def return_dimensions(self):
-		filename,variable = CovCM4Global.get_filenames()[0]
+		filename = dict([(x,y) for x,y in CovCM4Global.get_filenames()])[self.variable]
 		nc_fid = Dataset(filename[0])
 		lats = nc_fid["lat"][:]
 		lons = nc_fid["lon"][:]
 		data = nc_fid[self.variable][0, 0,:,:]
-		data,lons = shiftgrid(180.5, data, lons, start=False)		
+		data,lons = shiftgrid(180.5, data, lons, start=False)
 		return (LonList(lons),LatList(lats))
 
 	def return_dataset(self,depth_idx=2):
 		master_list = CovCM4Global.get_filenames()
-		file_list = dict([(y,x) for x,y in master_list])[self.variable]
+		file_list = dict([(x,y) for x,y in master_list])[self.variable]
 		array_variable_list = []
 		for file in np.sort(file_list):
 			time_list = []
