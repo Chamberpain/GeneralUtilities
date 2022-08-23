@@ -122,36 +122,32 @@ class TimeList(BaseList):
 		assert all([isinstance(x,datetime.datetime) for x in self]) 
 
 	@classmethod
-	def set_ref_date(cls,ref_date):
-		cls.ref_date = ref_date
+	def time_list_from_seconds(cls,seconds_list,ref_date):
+		return cls([ref_date + datetime.timedelta(seconds=x) for x in seconds_list])
 
 	@classmethod
-	def time_list_from_seconds(cls,seconds_list):
-		return cls([cls.ref_date + datetime.timedelta(seconds=x) for x in seconds_list])
+	def time_list_from_minutes(cls,minutes_list,ref_date):
+		return cls([ref_date + datetime.timedelta(minutes=x) for x in minutes_list])
 
 	@classmethod
-	def time_list_from_minutes(cls,minutes_list):
-		return cls([cls.ref_date + datetime.timedelta(minutes=x) for x in minutes_list])
+	def time_list_from_hours(cls,hours_list,ref_date):
+		return cls([ref_date + datetime.timedelta(hours=x) for x in hours_list])
 
 	@classmethod
-	def time_list_from_hours(cls,hours_list):
-		return cls([cls.ref_date + datetime.timedelta(hours=x) for x in hours_list])
+	def time_list_from_days(cls,days_list,ref_date):
+		return cls([ref_date + datetime.timedelta(days=x) for x in days_list])
 
-	@classmethod
-	def time_list_from_days(cls,days_list):
-		return cls([cls.ref_date + datetime.timedelta(days=x) for x in days_list])
-
-	def days_since(self):
-		time_delta_list = [x-self.ref_date for x in self]
+	def days_since(self,ref_date):
+		time_delta_list = [x-ref_date for x in self]
 		return [x.days for x in time_delta_list]
 
-	def hours_since(self):
+	def hours_since(self,ref_date):
 		hours_in_day = 24
 		seconds_in_hour = 3600
-		time_delta_list = [x-self.ref_date for x in self]
+		time_delta_list = [x-ref_date for x in self]
 		return [x.days*hours_in_day+x.seconds*seconds_in_hour for x in time_delta_list]
 
-	def seconds_since(self):
+	def seconds_since(self,ref_date):
 		seconds_in_day = 24*60*60
-		time_delta_list = [x-self.ref_date for x in self]
+		time_delta_list = [x-ref_date for x in self]
 		return [x.days*seconds_in_day+x.seconds for x in time_delta_list]
