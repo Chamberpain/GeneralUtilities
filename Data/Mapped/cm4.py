@@ -42,7 +42,7 @@ class CM4(MappedBase):
 class CM4O2(CM4):
 	variable = 'o2'
 
-class CM4ThetO(CM4):
+class CM4ThetaO(CM4):
 	variable = 'thetao'
 
 class CM4Sal(CM4):
