@@ -18,7 +18,13 @@ def make_folder_if_does_not_exist(folder_path):
 
 class FilePathHandler(object):
 	def __init__(self,init_root_dir,filename):
-		pipeline_base = init_root_dir.replace('Utilities','Pipeline')
+		init_root_dir_list = init_root_dir.split('/')
+		idx = init_root_dir_list.index('Utilities')
+		dir_list = init_root_dir_list[idx-1:]
+		dir_list.remove('Utilities')
+		pipeline_base = os.path.join(get_data_folder(),'/'.join(dir_list))
+
+
 		self._tmp = os.path.join(pipeline_base,filename,'tmp')
 		self._out = os.path.join(pipeline_base,filename,'out')
 		self._store = os.path.join(pipeline_base,filename,'store')

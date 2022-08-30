@@ -1,42 +1,20 @@
 import os
-from GeneralUtilities.Data.lagrangian.argo.__init__ import ROOT_DIR
+from GeneralUtilities.Data.Lagrangian.Argo.__init__ import ROOT_DIR
 from netCDF4 import Dataset
 import datetime
 import geopy
 import re
 import numpy as np 
-import geopy.distance
-from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead,BaseDate,data_return
+from GeneralUtilities.Data.Lagrangian.Argo.prof_class import BaseProfClass,prof_class_dict
+from GeneralUtilities.Data.Lagrangian.Argo.traj_class import BaseTrajClass,traj_class_dict
+from GeneralUtilities.Data.Lagrangian.Argo.tech_class import BaseTechClass,tech_class_dict
+from GeneralUtilities.Data.Lagrangian.drifter_base_class import DrifterArrayBase,BaseRead
+from GeneralUtilities.Data.Lagrangian.lagrangian_utilities import data_return,parse_time,julian_time_parse
+from GeneralUtilities.Compute.list import DepthList
 from GeneralUtilities.Data.pickle_utilities import load,save
 from GeneralUtilities.Data.Filepath.instance import FilePathHandler
+from GeneralUtilities.Data.Lagrangian.Argo.utilities import compile_classes
 import pickle
-
-
-
-def data_adjust(data_instance, data_adjusted_instance):
-	"""
-	Function replaces adjusted data in the original data array
-
-	Parameters
-	----------
-	data_instance: net cdf data instance
-	adjusted: adjusted net cdf data instance
-
-	Returns
-	-------
-	data processed in a usable form (string, array, float)
-	"""
-	masked_data_array = data_instance[:].data
-	masked_adjusted_instance = data_adjusted_instance[:]
-	masked_data_array[~masked_adjusted_instance.mask]=masked_adjusted_instance[~masked_adjusted_instance.mask]
-	masked_data_array = np.ma.masked_equal(masked_data_array,data_instance._FillValue)
-	return masked_data_array
-
-
-
-def format_byte_list_to_string(byte_list):
-	return ['None' if x is None else x.decode("utf-8") for x in byte_list]
-
 
 
 class ArgoReader(BaseRead):
@@ -63,13 +41,25 @@ class ArgoReader(BaseRead):
 		self.folder = nc_folder
 		files = os.listdir(nc_folder)
 		if meta:
-			self.meta = self._file_reader(nc_folder,files,'.*meta.nc',self.MetaClass)
+			self.meta = self._file_reader(nc_folder,files,'.*meta.nc',MetaClass)
 		if traj:
-			self.traj = self._file_reader(nc_folder,files,'.*_traj.nc',self.TrajClass)
+			try:
+				TrajClass = traj_class_dict[self.meta.platform_type]
+			except KeyError:
+				TrajClass = BaseTrajClass
+			self.traj = self._file_reader(nc_folder,files,'.*_traj.nc',TrajClass)
 		if prof:
-			self.prof = self._file_reader(nc_folder,files,'.*prof.nc',self.ProfClass)
+			try:
+				ProfClass = prof_class_dict[self.meta.platform_type]
+			except KeyError:
+				ProfClass = BaseProfClass
+			self.prof = self._file_reader(nc_folder,files,'.*prof.nc',ProfClass)
 		if tech:
-			self.tech = self._file_reader(nc_folder,files,'.*tech.nc',self.TechClass)
+			try:
+				TechClass = tech_class_dict[self.meta.platform_type]
+			except KeyError:
+				TechClass = BaseTechClass
+			self.tech = self._file_reader(nc_folder,files,'.*tech.nc',TechClass)
 		super(ArgoReader,self).__init__()
 
 	def _file_reader(self,nc_folder,files,data_format,data_class):
@@ -80,6 +70,146 @@ class ArgoReader(BaseRead):
 			return data_class(os.path.join(nc_folder,file_name))
 		else:
 			return None
+
+	def get_variables(self):
+		return ['PRES', 'TEMP', 'PSAL']
+
+	def is_problem(self):
+		def string_report(bool_list,dummy_class,dummy_class_subtype):
+			if bool_list[-1]:
+				print(dummy_class.name)
+				print(dummy_class_subtype.name)
+		bool_list = []
+		class_list = []
+		try:
+			bool_list.append(self.tech.drift_depth.is_problem())
+		except AttributeError:
+			pass
+		try:
+			self.prof.pos._list
+		except AttributeError:
+			bool_list.append(True)
+		try: 
+			class_list.append(self.traj)
+		except AttributeError:
+			pass
+		try:
+			class_list.append(self.prof)
+		except AttributeError:
+			pass
+		for dummy_class in class_list:
+			if dummy_class:
+				bool_list.append(dummy_class.pos.is_problem())
+				string_report(bool_list,dummy_class,dummy_class.pos)
+				bool_list.append(dummy_class.date.is_problem())
+				string_report(bool_list,dummy_class,dummy_class.date)
+				bool_list.append(dummy_class.speed.is_problem())
+				string_report(bool_list,dummy_class,dummy_class.speed)
+		truth_value = any(bool_list)
+		if not bool_list:
+			truth_value = True 
+		if truth_value: 
+			print('I am a problem, do not add me to anything')
+		return truth_value
+
+class MetaClass():
+	""" class to organize all of read in meta net cdf data
+		----------
+		file_path: the file path of the net cdf file you wish to read
+
+	"""
+	name = 'Meta'
+	def __init__(self,file_path):
+		print('I am opening Meta File')
+		nc_fid = Dataset(file_path)
+		self.folder = os.path.dirname(file_path)
+		self.id = data_return(nc_fid['PLATFORM_NUMBER'])
+		try:
+			self.platform = data_return(nc_fid['PLATFORM_TYPE'])
+		except IndexError:
+			self.platform = data_return(nc_fid['PLATFORM_MODEL'])
+		self.project_name = data_return(nc_fid['PROJECT_NAME'])
+		self.positioning_system = self._positioning_system_format(nc_fid.variables['POSITIONING_SYSTEM'])
+		if bool(data_return(nc_fid.variables['LAUNCH_QC'])):
+			launch_lat = data_return(nc_fid.variables['LAUNCH_LATITUDE'])
+			launch_lon = data_return(nc_fid.variables['LAUNCH_LONGITUDE'])
+			self.launch_loc = geopy.Point(launch_lat,launch_lon)
+		self.launch_date = parse_time(nc_fid.variables['LAUNCH_DATE'])
+		if bool(data_return(nc_fid.variables['START_DATE_QC'])):
+			self.start_date = parse_time(nc_fid.variables['START_DATE'])
+
+		nc_fid.close()
+
+
+	def _positioning_system_format(self,data_instance):
+		""" Performs necessary checks on data instance
+			Parameters
+			----------
+			data_instance: net cdf positioning system data instance
+
+			Returns
+			-------
+			positioning system string
+		"""
+		positioning_string = data_return(data_instance)
+		if not positioning_string:
+			return None
+		if positioning_string in ['IRIDIUM','GTS','GPSIRIDIUM','IRIDIUMGPS','GPSIRIDIUMRAFOS','BEIDOU']:
+			positioning_string = 'GPS'
+		assert positioning_string in ['ARGOS','GPS']
+		return positioning_string
+
+def aggregate_argo_list(read_class=ArgoReader,num=-1):
+	"""
+	function that returns dictionary of argo read classes
+
+	Parameters
+	----------
+	num: the length of the dictionary you want (default is all files)
+	list_save: whether you want to save the list (default is false)
+
+	Returns
+	-------
+	dictionary of argo read classes.
+	"""
+
+	all_dict_filename = os.getenv("HOME")+'/Data/Raw/Argo/all_dict_'+read_class.data_description
+	try: 
+		with open(all_dict_filename,'rb') as pickle_file:
+			out_data = pickle.load(pickle_file)
+			BaseRead.all_dict = out_data		
+	except FileNotFoundError:
+		read_class.compile_classes(num)
+		with open(all_dict_filename, 'wb') as pickle_file:
+			pickle.dump(BaseRead.all_dict,pickle_file)
+		pickle_file.close()
+
+def full_argo_list():
+	import copy
+	from GeneralUtilities.Data.lagrangian.bgc.bgc_read import BGCReader
+	aggregate_argo_list()
+	all_dict_holder = copy.deepcopy(BaseRead.all_dict)
+	aggregate_argo_list(read_class=BGCReader)
+	for float_num,float_class in BGCReader.all_dict.items():
+		all_dict_holder[float_num] = float_class
+	BaseRead.all_dict = all_dict_holder
+
+class ArgoArray(DrifterArrayBase):
+
+	def __init__(self,*args,num=99999,**kwargs):
+		super().__init__(*args, **kwargs)
+		matches = compile_classes()
+		number = 0
+		for match in matches:
+			if number>num:
+				continue
+			argo_instance = ArgoReader(match,prof=False,traj=False,tech=False)
+			print('I am opening number match ',number)
+			print ('filename is ',matches[number])
+			# if not argo_instance.problem:
+			self.update({(argo_instance.meta.id,argo_instance)})
+			number += 1 
+
 
 	@staticmethod
 	def get_pos_breakdown():
@@ -116,9 +246,6 @@ class ArgoReader(BaseRead):
 			lon_list += [lon]
 		return (lat_list,lon_list)
 
-	def get_variables(self):
-		return ['PRES', 'TEMP', 'PSAL']
-
 	@staticmethod
 	def recent_bins_by_sensor(variable,lat_bins,lon_bins):
 		date_list = ArgoReader.get_recent_date_list()
@@ -129,221 +256,4 @@ class ArgoReader(BaseRead):
 		mask = np.array(sensor_mask)&np.array(date_mask)
 		return np.array(bin_list)[mask]
 
-	@staticmethod
-	def compile_classes(num):
-		#this should probably use the find files function in search utility
-		data_file_name = os.getenv("HOME")+'/Data/Raw/Argo'
-		def compile_matches():
-			matches = []
-			for root, dirnames, filenames in os.walk(data_file_name):
-				meta_match = re.compile('.*meta.nc') # all folders will have a meta file
-				if any([file.endswith('meta.nc') for file in filenames]):
-					matches.append(root)
-			return matches
 
-		matches = compile_matches()
-		number = 0
-		while number<len(matches[:num]):
-			print('I am opening number match ',number)
-			print ('filename is ',matches[number])
-			ArgoReader(matches[number])
-			number += 1 
-
-	class BaseReadClass(object):
-		pass
-		""" base class that contains functions used by both ProfClass and TrajClass
-			----------
-
-		"""	
-		class Position(BasePosition):
-			""" class that is a holder of the position information
-
-			"""     
-			def __init__(self,nc_fid,mask):			
-				self._list = [geopy.Point(_[0],_[1]) for _ in zip(nc_fid['LATITUDE'][mask],nc_fid['LONGITUDE'][mask])]
-				if not self._list:
-					print('the position information was empty, to prove it, take a look at')
-					print(nc_fid['LATITUDE'][:])
-					print(nc_fid['LONGITUDE'][:])
-
-	class MetaClass():
-		""" class to organize all of read in meta net cdf data
-			----------
-			file_path: the file path of the net cdf file you wish to read
-
-		"""
-		name = 'Meta'
-		def __init__(self,file_path):
-			print('I am opening Meta File')
-			nc_fid = Dataset(file_path)
-			self.id = data_return(nc_fid['PLATFORM_NUMBER'])
-			self.project_name = data_return(nc_fid['PROJECT_NAME'])
-			self.date = self.Date(nc_fid)
-			self.positioning_system = self._positioning_system_format(nc_fid.variables['POSITIONING_SYSTEM'])
-			if bool(data_return(nc_fid.variables['LAUNCH_QC'])):
-				launch_lat = data_return(nc_fid.variables['LAUNCH_LATITUDE'])
-				launch_lon = data_return(nc_fid.variables['LAUNCH_LONGITUDE'])
-				self.launch_loc = geopy.Point(launch_lat,launch_lon)
-			nc_fid.close()
-
-
-		def _positioning_system_format(self,data_instance):
-			""" Performs necessary checks on data instance
-				Parameters
-				----------
-				data_instance: net cdf positioning system data instance
-
-				Returns
-				-------
-				positioning system string
-			"""
-			positioning_string = data_return(data_instance)
-			if not positioning_string:
-				return None
-			if positioning_string in ['IRIDIUM','GTS','GPSIRIDIUM','IRIDIUMGPS','GPSIRIDIUMRAFOS','BEIDOU']:
-				positioning_string = 'GPS'
-			assert positioning_string in ['ARGOS','GPS']
-			return positioning_string
-
-		class Date(BaseDate):
-			def __init__(self,nc_fid):
-				self.launch_date = self.parse_time(nc_fid.variables['LAUNCH_DATE'])
-				if bool(data_return(nc_fid.variables['START_DATE_QC'])):
-					self.start_date = self.parse_time(nc_fid.variables['START_DATE'])
-
-	class TrajClass(BaseReadClass):
-		""" class to organize all of read in trajectory net cdf data
-			----------
-			file_path: the file path of the net cdf file you wish to read
-
-		"""	
-		name = 'Traj'
-		def __init__(self,file_path):
-			print('I am opening Traj File')
-			nc_fid = Dataset(file_path)
-			self.date = self.Date(nc_fid)
-			mask = self.date.return_mask()
-			self.position_accuracy = nc_fid['POSITION_ACCURACY'][mask]
-			self.pos = self.Position(nc_fid,mask)
-			self.speed = Speed(self.date,self.pos,speed_limit=5)
-			nc_fid.close()
-
-		class Date(BaseDate):
-			def __init__(self,nc_fid):
-				try:
-					date_data = data_adjust(nc_fid['JULD'],nc_fid['JULD_ADJUSTED'])
-				except IndexError:
-					date_data = nc_fid['JULD'][:]
-				mask = (np.array([_ in ['1','2'] for _ in format_byte_list_to_string(nc_fid['POSITION_QC'][:].tolist())]))&\
-				(~nc_fid['LONGITUDE'][:].mask)&\
-				(~nc_fid['LATITUDE'][:].mask)&\
-				(~nc_fid['POSITION_ACCURACY'][:].mask)&\
-				(~date_data.mask)
-				self._list = self.julian_time_parse(date_data[mask].data, self.parse_time(nc_fid['REFERENCE_DATE_TIME']))
-				self._mask = mask
-
-
-		# def assign_depth(self,depth):
-		# 	try:
-		# 		self.depth = [depth.return_z(_) for _ in self.pos]
-
-	class ProfClass(BaseReadClass):
-		""" class to organize all of read in profile net cdf data
-			----------
-			file_path: the file path of the net cdf file you wish to read
-
-		"""		
-		name = 'Profile'
-		def __init__(self,file_path):
-			print('I am opening Prof File')
-			nc_fid = Dataset(file_path)
-			self.date = self.Date(nc_fid)
-			mask = self.date.return_mask()
-			self.pos = self.Position(nc_fid,mask)
-			self.speed = Speed(self.date,self.pos,speed_limit=5)
-			nc_fid.close()
-
-		class Date(BaseDate):
-			def __init__(self,nc_fid):
-				date_data = nc_fid['JULD_LOCATION'][:]
-				mask = (np.array([_ in ['1','2'] for _ in format_byte_list_to_string(nc_fid['POSITION_QC'][:].tolist())]))&\
-				(~nc_fid['LONGITUDE'][:].mask)&\
-				(~nc_fid['LATITUDE'][:].mask)&\
-				(~date_data.mask)
-				
-				self._list = self.julian_time_parse(date_data[mask].data, self.parse_time(nc_fid['REFERENCE_DATE_TIME']))
-				self._mask = mask
-
-	class TechClass():
-		name = 'Tech'
-		def __init__(self,file_path):
-			print('I am opening Tech File')
-			nc_fid = Dataset(file_path)
-			self.drift_depth = self.DriftDepth(nc_fid)
-
-
-		class DriftDepth():
-			def __init__(self,nc_fid):
-
-
-				variable_name_list = [''.join(format_byte_list_to_string(i)).replace(" ","") for i in nc_fid['TECHNICAL_PARAMETER_NAME'][:].data]
-				
-				indices = [] 
-				variable_list = ['PRESSURE_InternalVacuumProfileStart_mbar','PRES_ParkMaximum_dBAR','PRES_ParkMinimum_dBAR']
-				indices += [i for i, x in enumerate(variable_name_list) if x in variable_list]
-				# if not indices:
-				# 	print(np.unique(variable_name_list))
-
-				holder = [''.join(format_byte_list_to_string(nc_fid['TECHNICAL_PARAMETER_VALUE'][:].data[_,:])).replace(" ","") for _ in indices]
-				self._list = []
-				for dummy in holder:
-					self._list.append(int(''.join([_ for _ in dummy if _.isdigit()])))
-			
-
-
-			def is_problem(self):
-				print(self._list)
-				if not self._list:
-					return False
-				test_1 = sum(np.array(self._list)<500)<3	# allow a window of 500 on either side of drift depth
-				if not test_1:
-					print('drift depth less than 500 mb')
-				test_2 = sum(np.array(self._list)>1500)<3 # 
-				if not test_2:
-					print('drift depth greater than 1500 mb')
-				return ~(test_1&test_2)
-
-def aggregate_argo_list(read_class=ArgoReader,num=-1):
-	"""
-	function that returns dictionary of argo read classes
-
-	Parameters
-	----------
-	num: the length of the dictionary you want (default is all files)
-	list_save: whether you want to save the list (default is false)
-
-	Returns
-	-------
-	dictionary of argo read classes.
-	"""
-
-	all_dict_filename = os.getenv("HOME")+'/Data/Raw/Argo/all_dict_'+read_class.data_description
-	try: 
-		with open(all_dict_filename,'rb') as pickle_file:
-			out_data = pickle.load(pickle_file)
-			BaseRead.all_dict = out_data		
-	except FileNotFoundError:
-		read_class.compile_classes(num)
-		with open(all_dict_filename, 'wb') as pickle_file:
-			pickle.dump(BaseRead.all_dict,pickle_file)
-		pickle_file.close()
-
-def full_argo_list():
-	import copy
-	from GeneralUtilities.Data.lagrangian.bgc.bgc_read import BGCReader
-	aggregate_argo_list()
-	all_dict_holder = copy.deepcopy(BaseRead.all_dict)
-	aggregate_argo_list(read_class=BGCReader)
-	for float_num,float_class in BGCReader.all_dict.items():
-		all_dict_holder[float_num] = float_class
-	BaseRead.all_dict = all_dict_holder

@@ -68,6 +68,7 @@ class LonList(BaseList):
 		holder[holder<0]=holder[holder<0]+360
 		return holder
 
+
 class LatList(BaseList):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -116,6 +117,20 @@ class GeoList(BaseList):
 		import geopandas as gp
 		return gp.GeoSeries([shapely.geometry.Point(x.longitude,x.latitude) for x in self])
 
+	def distance_between(self):	
+		difference_list = [geopy.distance.great_circle(self[idx],self[idx+1]).km for idx in range(len(self)-1)]
+		return difference_list
+
+class SpeedList(BaseList):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		assert all(x>=0 for x in self)
+
+	@classmethod
+	def from_pos_and_time_list(cls,pos_list,time_list):
+		speed = np.array(pos_list.distance_between())*1000/np.array(time_list.seconds_difference())
+		return cls(list(speed))
+
 class TimeList(BaseList):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -151,3 +166,6 @@ class TimeList(BaseList):
 		seconds_in_day = 24*60*60
 		time_delta_list = [x-ref_date for x in self]
 		return [x.days*seconds_in_day+x.seconds for x in time_delta_list]
+
+	def seconds_difference(self):
+		return [(self[idx+1]-self[idx]).seconds for idx in range(len(self)-1)]	
