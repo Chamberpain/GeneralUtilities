@@ -7,7 +7,7 @@ import re
 
 def compile_classes():
 	#this should probably use the find files function in search utility
-	data_file_name = get_data_folder()+'/Data/Raw/Argo'
+	data_file_name = get_data_folder()+'/Raw/Argo'
 	matches = []
 	for root, dirnames, filenames in os.walk(data_file_name):
 		print(filenames)
