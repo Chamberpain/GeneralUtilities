@@ -2,7 +2,10 @@ from GeneralUtilities.Data.Lagrangian.Argo.utilities import BaseReadClass,ArgoTi
 from netCDF4 import Dataset
 from GeneralUtilities.Compute.list import DepthList
 
-tech_class_dict = {}
+class TechDict(dict):
+	pass
+
+tech_class_dict = TechDict({})
 
 class BaseTechClass(BaseReadClass):
 	name = 'Tech'

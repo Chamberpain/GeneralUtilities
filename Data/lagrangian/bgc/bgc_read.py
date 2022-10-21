@@ -1,13 +1,13 @@
 import os
-from GeneralUtilities.Data.lagrangian.bgc.__init__ import ROOT_DIR
-from GeneralUtilities.Data.lagrangian.argo.argo_read import ArgoReader,BaseDate,data_adjust,data_return,format_byte_list_to_string
+from GeneralUtilities.Data.Lagrangian.bgc.__init__ import ROOT_DIR
+from GeneralUtilities.Data.Lagrangian.Argo.argo_read import ArgoReader,BaseDate,data_adjust,data_return,format_byte_list_to_string
 from netCDF4 import Dataset
 import datetime
 import geopy
 import re
 import numpy as np 
 import geopy.distance
-from GeneralUtilities.Data.lagrangian.drifter_base_class import BasePosition,Speed,BaseRead
+from GeneralUtilities.Data.Lagrangian.drifter_base_class import BasePosition,Speed,BaseRead
 from GeneralUtilities.Data.pickle_utilities import load,save
 from GeneralUtilities.Data.Filepath.instance import FilePathHandler
 import pickle

@@ -4,8 +4,10 @@ import numpy as np
 from GeneralUtilities.Data.Lagrangian.Argo.utilities import BaseReadClass,ArgoTime,Speed,ArgoTime,format_byte_list_to_string
 from GeneralUtilities.Data.Lagrangian.lagrangian_utilities import julian_time_parse,parse_time
 
+class ProfDict(dict):
+	pass
 
-prof_class_dict = {}
+prof_class_dict = ProfDict({})
 
 class Date(ArgoTime):
 	@classmethod

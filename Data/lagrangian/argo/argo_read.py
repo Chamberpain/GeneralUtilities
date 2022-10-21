@@ -179,7 +179,7 @@ def aggregate_argo_list(read_class=ArgoReader,num=-1):
 			out_data = pickle.load(pickle_file)
 			BaseRead.all_dict = out_data		
 	except FileNotFoundError:
-		read_class.compile_classes(num)
+		compile_classes(num)
 		with open(all_dict_filename, 'wb') as pickle_file:
 			pickle.dump(BaseRead.all_dict,pickle_file)
 		pickle_file.close()

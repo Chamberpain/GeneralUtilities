@@ -1,7 +1,10 @@
 from GeneralUtilities.Data.Lagrangian.Argo.utilities import BaseReadClass,ArgoTime,Speed,ArgoTime
 from netCDF4 import Dataset
 
-traj_class_dict = {}
+class TrajDict(dict):
+	pass
+
+traj_class_dict = TrajDict({})
 
 class Date(ArgoTime):
 	@classmethod

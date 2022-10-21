@@ -1,14 +1,16 @@
 import datetime
 import geopy
 from GeneralUtilities.Data.Lagrangian.drifter_base_class import BasePosition,BaseSpeed,BaseTime
+from GeneralUtilities.Data.Filepath.instance import get_data_folder
 import os
 import re
 
 def compile_classes():
 	#this should probably use the find files function in search utility
-	data_file_name = os.getenv("HOME")+'/Data/Raw/Argo'
+	data_file_name = get_data_folder()+'/Data/Raw/Argo'
 	matches = []
 	for root, dirnames, filenames in os.walk(data_file_name):
+		print(filenames)
 		meta_match = re.compile('.*meta.nc') # all folders will have a meta file
 		if any([file.endswith('meta.nc') for file in filenames]):
 			matches.append(root)
