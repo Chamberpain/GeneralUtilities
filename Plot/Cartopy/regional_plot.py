@@ -69,10 +69,10 @@ class GOMCartopy(RegionalBase):
 class CCSCartopy(RegionalBase):
     llcrnrlon=-135.
     llcrnrlat=20
-    urcrnrlon=-105
+    urcrnrlon=-110
     urcrnrlat=55
     def __init__(self,*args,**kwargs):
-        print('I am plotting GOM')
+        print('I am plotting CCS')
         super().__init__(*args,**kwargs)
 
 class DrakePassageCartopy(RegionalBase):

@@ -128,7 +128,7 @@ class SpeedList(BaseList):
 
 	@classmethod
 	def from_pos_and_time_list(cls,pos_list,time_list):
-		speed = np.array(pos_list.distance_between())*1000/np.array(time_list.seconds_difference())
+		speed = np.array(pos_list.distance_between())*1000.0/np.array(time_list.seconds_difference())
 		return cls(list(speed))
 
 class TimeList(BaseList):
@@ -168,4 +168,4 @@ class TimeList(BaseList):
 		return [x.days*seconds_in_day+x.seconds for x in time_delta_list]
 
 	def seconds_difference(self):
-		return [(self[idx+1]-self[idx]).seconds for idx in range(len(self)-1)]	
+		return [(self[idx+1]-self[idx]).total_seconds() for idx in range(len(self)-1)]	

@@ -1,5 +1,7 @@
-from GeneralUtilities.Data.Lagrangian.Argo.utilities import BaseReadClass,ArgoTime,Speed,ArgoTime
+from GeneralUtilities.Data.Lagrangian.Argo.utilities import BaseReadClass,ArgoTime,Speed,ArgoTime,data_adjust,format_byte_list_to_string
+from GeneralUtilities.Data.Lagrangian.lagrangian_utilities import data_return,parse_time,julian_time_parse
 from netCDF4 import Dataset
+import numpy as np
 
 class TrajDict(dict):
 	pass

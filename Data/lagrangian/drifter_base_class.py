@@ -42,6 +42,7 @@ class BaseSpeed(SpeedList,ABC):
 		bool_value = (np.array(self)>self.speed_limit).any()
 		if bool_value:
 			print('speed is the problem')
+			print('maximum value of speed was ',max(np.array(self)))
 		return bool_value
 
 
@@ -54,6 +55,29 @@ class BasePosition(GeoList,ABC):
 	def plot(self):
 		lat,lon = self.lats_lons()
 		plt.plot(lon,lat)
+
+	def return_pos_bins(self,lat_bins,lon_bins,index_values=False):
+		""" Returns bins of position list in index form or actual 
+
+			   Parameters
+			   ----------
+			   lat_bins: list of latitudes of the grid
+			   lon_bins: list of longitudes of the grid
+			   index_values: only set you want to include
+
+			   Returns
+			   -------
+			   list of grid indices or actual lat/lon 
+		"""       
+		if index_values:
+			pos_list = list(filter(None,np.array(self)[index_values].tolist()))
+		else:
+			pos_list = list(filter(None,self))
+		lat_bin_index = lat_bins.digitize([x.latitude for x in pos_list])
+		lon_bin_index = lon_bins.digitize([x.longitude for x in pos_list])
+		lats = [lat_bins[x-1] for x in lat_bin_index]
+		lons = [lon_bins[x-1] for x in lon_bin_index]
+		return [geopy.Point(x) for x in zip(lats,lons)]
 
 	@property
 	@abstractmethod
@@ -78,14 +102,20 @@ class BasePosition(GeoList,ABC):
 		if not self:
 			print('position list is empty')
 			return True
-		lat_list,lon_list = self.lats_lons()
+		try:
+			lat_list,lon_list = self.lats_lons()
+		except AssertionError:
+			#this is the case for lats or lons outside of geographic bounds
+			return True
 		difference_list = self.distance_between()
 		test_1 = (np.array(difference_list)<self.max_distance_between).all()
 		if not test_1:
 			print('difference between positions is greater than '+str(self.max_distance_between)+' nm')				
-		test_2 = sum(np.array(difference_list)==0)<3
+		test_2 = sum(np.array(difference_list)==0.0)<6
 		if not test_2:
 			print('the difference in position is 0')
+			print('print the number of 0 position occurances is ')
+			print(sum(np.array(difference_list)==0.0))
 			print(difference_list)
 		test_3 = (np.array(lon_list)<=180).all()
 		if not test_3:
@@ -135,7 +165,7 @@ class BaseTime(TimeList,ABC):
 		"""
 
 		seconds_difference_list = self.seconds_difference()
-		test_1 = (np.array(seconds_difference_list)>0).all()	# make sure all time is going in the right direction
+		test_1 = (np.array(seconds_difference_list)>0.0).all()	# make sure all time is going in the right direction
 		if not test_1:
 			print('time is not going in the right direction')
 		test_2 = ((np.array(self))<datetime.datetime.now()).all() # make sure all profiles happen before today
@@ -206,53 +236,65 @@ class DrifterArrayBase(dict):
 		gridded = np.array(data_list).reshape(XX.shape)
 		return gridded
 
-	def get_full_speed_list():
+	def get_full_speed_list(self):
 		full_speed_list = []
-		for k,_ in enumerate(BaseRead.all_dict.values()):
-			speed = _.prof.speed._list
-			full_speed_list+=speed.tolist()
+		for _ in self.values():
+			full_speed_list+=_.prof.speed
 		return (full_speed_list)
 
-	def get_full_date_list():
+	def get_full_date_list(self):
 		full_date_list = []
-		for _ in BaseRead.all_dict.values():
-			full_date_list+=_.prof.date._list
+		for _ in self.values():
+			full_date_list+=_.prof.date
 		return full_date_list
 
-	def get_recent_date_list():
+	def get_recent_date_list(self):
 		recent_date_list = []
-		for x in BaseRead.all_dict.values():
-			recent_date_list+=[x.prof.date._list[-1]]
+		for x in self.values():
+			recent_date_list+=[x.prof.date[-1]]
 		return recent_date_list	
 
-	def get_deployment_date_list():
+	def get_recent_mask(self):
+		date_list = self.get_recent_date_list()
+		return [max(date_list)-datetime.timedelta(days=180)<x for x in date_list]
+
+	def get_deployment_date_list(self):
 		recent_date_list = []
-		for x in BaseRead.all_dict.values():
-			recent_date_list+=[x.prof.date._list[0]]
+		for x in self.values():
+			recent_date_list+=[x.prof.date[0]]
 		return recent_date_list	
 
-	def get_recent_bins(lat_bins,lon_bins):
+	def get_recent_bins(self,lat_bins,lon_bins):
 		bin_list = []
-		for x in BaseRead.all_dict.values():
+		for x in self.values():
 			bin_list+=[x.prof.pos.return_pos_bins(lat_bins,lon_bins,index_values=False)[-1]]
 		return bin_list
 
-	def get_recent_pos():
-		pos_list = [x.prof.pos._list[-1] for x in BaseRead.all_dict.values()]
+	def get_full_lat_lon_list(self):
+		lat_list = []
+		lon_list = []
+		for ii in self.values():
+			lat,lon = zip(*[(dummy.latitude,dummy.longitude) for dummy in ii.prof.pos])
+			lat_list += [lat]
+			lon_list += [lon]
+		return (LatList(lat_list),LonList(lon_list))
+
+	def get_recent_pos(self):
+		pos_list = [x.prof.pos[-1] for x in self.values()]
 		return pos_list
 
-	def get_floats_in_box(shape):
+	def get_floats_in_box(self,shape):
 		float_name_list = []
-		for dummy_float in BaseRead.all_dict.values():
-			truth_list = [shape.contains(x) for x in GeoList(dummy_float.prof.pos._list).to_shapely()]
+		for dummy_float in self.values():
+			truth_list = [shape.contains(x) for x in GeoList(dummy_float.prof.pos).to_shapely()]
 			if any(truth_list):
 				float_name_list.append(dummy_float.meta.id)
 		return float_name_list
 
-	def get_subsampled_float_dict(percent):
-		N = round(len(BaseRead.all_dict)*percent)
-		return dict(random.sample(BaseRead.all_dict.items(), N))
+	def get_subsampled_float_dict(self,percent):
+		N = round(len(self)*percent)
+		return dict(random.sample(self.items(), N))
 
-	def get_sensors():
-		sensor_list = [x.get_variables() for x in BaseRead.all_dict.values()]
+	def get_sensors(self):
+		sensor_list = [x.get_variables() for x in self.values()]
 		return sensor_list
