@@ -9,6 +9,16 @@ class RegionalBase(BaseCartopy):
         self.ax.set_extent([self.llcrnrlon,self.urcrnrlon,self.llcrnrlat,self.urcrnrlat], crs=ccrs.PlateCarree())
         self.finish_map(adjustable=adjustable)
 
+
+class GOMCartopy(RegionalBase):
+    llcrnrlon=-87
+    llcrnrlat=23
+    urcrnrlon=-84
+    urcrnrlat=25
+    def __init__(self,*args,**kwargs):
+        print('I am plotting GOM')
+        super().__init__(*args,**kwargs)
+
 class SOSECartopy(RegionalBase):
     llcrnrlon=-180.
     llcrnrlat=-80.
