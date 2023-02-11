@@ -2,6 +2,8 @@
 
 It is necessary to create a symbolic link from the GeneralUtilities base folder to the folder that will contain your data. This symbolic linked folder will be called DataDir. The following describes how to make a symbolic link (https://linuxize.com/post/how-to-create-symbolic-links-in-linux-using-the-ln-command/)
 
+We also recommend creating a folder with all of your python projects and adding this to your .bashrc file. The details can be found here (https://stackoverflow.com/questions/3402168/permanently-add-a-directory-to-pythonpath)
+
 Data used in these projects can be automatically downloaded from the GeneralUtilities/Data/Download folder.
 master_download.py will download run all the download scripts and store them in the DataDir.
 
