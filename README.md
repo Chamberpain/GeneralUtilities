@@ -1,6 +1,6 @@
 # GeneralUtilities
 
-It is necessary to create a symbolic link from the GeneralUtilities base folder to the folder that will contain your data. This symbolic linked folder will be called DataDir.
+It is necessary to create a symbolic link from the GeneralUtilities base folder to the folder that will contain your data. This symbolic linked folder will be called DataDir. The following describes how to make a symbolic link (https://linuxize.com/post/how-to-create-symbolic-links-in-linux-using-the-ln-command/)
 
 Data used in these projects can be automatically downloaded from the GeneralUtilities/Data/Download folder.
 master_download.py will download run all the download scripts and store them in the DataDir.
