@@ -2,7 +2,9 @@ import os
 from GeneralUtilities.Data.Filepath.instance import get_data_folder
 import subprocess 
 
+argo_link = "https://www.seanoe.org/data/00311/42182/data/102270.tar.gz"
 argo_folder = os.path.join(get_data_folder(),'Raw/Argo/')
 
 def download():
-	subprocess.call(["rsync", "-avzh", "--delete","vdmzrs.ifremer.fr::argo/",argo_folder])
+	subprocess.call(["wget", argo_link, "-P" ,argo_folder])
+	
