@@ -7,4 +7,6 @@ argo_folder = os.path.join(get_data_folder(),'Raw/Argo/')
 
 def download():
 	subprocess.call(["wget", argo_link, "-P" ,argo_folder])
+	tarred_file = os.path.join(argo_folder, '102270.tar.gz')
+	subprocess.call(["tar", "-xvzf", tarred_file])
 	
