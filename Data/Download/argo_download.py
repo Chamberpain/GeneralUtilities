@@ -23,5 +23,3 @@ def download():
 	to_del = os.path.join(argo_folder, '202305-ArgoData')
 	subprocess.call('rm', '-rf', to_del)
 	subprocess.call(["rm", tarred_file])
-
-download()
