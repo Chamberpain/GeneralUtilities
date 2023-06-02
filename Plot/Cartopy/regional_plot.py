@@ -1,5 +1,9 @@
 from GeneralUtilities.Plot.Cartopy.eulerian_plot import BaseCartopy
-import cartopy.crs as ccrs
+# import cartopy.crs as ccrs
+class ccrs():
+    pass
+    def PlateCarree(central_longitude=0):
+        return None
 
 class RegionalBase(BaseCartopy):
 # need to add class method to generate ax with center lon

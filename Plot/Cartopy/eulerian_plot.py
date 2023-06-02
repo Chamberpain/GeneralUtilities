@@ -1,11 +1,21 @@
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+# import cartopy.crs as ccrs
+class ccrs():
+	pass
+	def PlateCarree(central_longitude=0):
+		return None
+
+# import cartopy.feature as cfeature
+class cfeature():
+	LAND = None
+	COASTLINE = None
+	def dummy():
+		pass
+
 import matplotlib.pyplot as plt
 import numpy as np
-import cartopy
-from cartopy import geodesic
+# import cartopy
 import os
-import cartopy.mpl.geoaxes
+# import cartopy.mpl.geoaxes
 import scipy
 from matplotlib.colors import LinearSegmentedColormap
 import pickle
@@ -95,9 +105,9 @@ def bathy(self,color=plt.cm.Oranges,contour=False):
 		self.contour(XX,YY,plot_data,cmap=plt.get_cmap('Greys'),alpha=.8,vmax=6,vmin=-2)
 
 
-cartopy.mpl.geoaxes.GeoAxesSubplot.streamline_plot = streamline_plot
-cartopy.mpl.geoaxes.GeoAxesSubplot.bathy = bathy
-cartopy.mpl.geoaxes.GeoAxesSubplot.ellipse = ellipse
+# cartopy.mpl.geoaxes.GeoAxesSubplot.streamline_plot = streamline_plot
+# cartopy.mpl.geoaxes.GeoAxesSubplot.bathy = bathy
+# cartopy.mpl.geoaxes.GeoAxesSubplot.ellipse = ellipse
 
 
 class BaseCartopy():
