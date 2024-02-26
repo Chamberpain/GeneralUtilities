@@ -117,6 +117,25 @@ class TahitiCartopy(RegionalBase):
         print('I am plotting Tahiti')
         super().__init__(*args,**kwargs)
 
+class CanaryCartopy(RegionalBase):
+    urcrnrlat = 30.0
+    llcrnrlat = 25.0
+    llcrnrlon = -19.0
+    urcrnrlon = -14.0
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Canary')
+        super().__init__(*args,**kwargs)
+
+class BermudaCartopy(RegionalBase):
+    llcrnrlon=-66
+    llcrnrlat=31
+    urcrnrlon=-63
+    urcrnrlat=33.5
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Tahiti')
+        super().__init__(*args,**kwargs)
+
+
 class NAtlanticCartopy(RegionalBase):
     llcrnrlon=-90.
     llcrnrlat=15.

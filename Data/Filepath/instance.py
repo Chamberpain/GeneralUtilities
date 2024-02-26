@@ -7,6 +7,9 @@ from GeneralUtilities.__init__ import ROOT_DIR
 def get_data_folder():
 	return os.path.join(ROOT_DIR,'DataDir')
 
+def get_compute_folder():
+	return os.path.join(ROOT_DIR,'ComputeDir')
+
 def make_folder_if_does_not_exist(folder_path):
 	print('working on '+folder_path)
 	if not os.path.exists(folder_path):
@@ -15,26 +18,7 @@ def make_folder_if_does_not_exist(folder_path):
 	else:
 		print("The directory already exists")	
 
-
-class FilePathHandler(object):
-	def __init__(self,init_root_dir,filename):
-		init_root_dir_list = init_root_dir.split('/')
-		idx = init_root_dir_list.index('Utilities')
-		dir_list = init_root_dir_list[idx-1:]
-		dir_list.remove('Utilities')
-		pipeline_base = os.path.join(get_data_folder(),'/'.join(dir_list))
-
-
-		self._tmp = os.path.join(pipeline_base,filename,'tmp')
-		self._out = os.path.join(pipeline_base,filename,'out')
-		self._store = os.path.join(pipeline_base,filename,'store')
-
-		folder_idx = init_root_dir.split('/').index('Projects')
-		self._data = '/'.join(init_root_dir.split('/')[:folder_idx+2])+'/Data/'
-
-		for dirs in [self._data,self._tmp,self._out,self._store]:
-			self.check_folder(dirs)
-						
+class PathHandlerBase(object):
 	def check_folder(self,folder):
 		CHECK_FOLDER = os.path.isdir(folder)
 		if not CHECK_FOLDER:
@@ -55,4 +39,42 @@ class FilePathHandler(object):
 		return self.file_return(self._store,filename)
 
 	def data_file(self,filename):
-		return self.file_return(self._data,filename)
+		return self.file_return(self._data,filename)	
+
+class FilePathHandler(PathHandlerBase):
+	def __init__(self,init_root_dir,filename):
+		init_root_dir_list = init_root_dir.split('/')
+		idx = init_root_dir_list.index('Utilities')
+		dir_list = init_root_dir_list[idx-1:]
+		dir_list.remove('Utilities')
+		pipeline_base = os.path.join(get_data_folder(),'/'.join(dir_list))
+
+
+		self._tmp = os.path.join(pipeline_base,filename,'tmp')
+		self._out = os.path.join(pipeline_base,filename,'out')
+		self._store = os.path.join(pipeline_base,filename,'store')
+
+		folder_idx = init_root_dir.split('/').index('Projects')
+		self._data = '/'.join(init_root_dir.split('/')[:folder_idx+2])+'/Data/'
+
+		for dirs in [self._data,self._tmp,self._out,self._store]:
+			self.check_folder(dirs)
+
+class ComputePathHandler(PathHandlerBase):
+	def __init__(self,init_root_dir,filename):
+		init_root_dir_list = init_root_dir.split('/')
+		idx = init_root_dir_list.index('Utilities')
+		dir_list = init_root_dir_list[idx-1:]
+		dir_list.remove('Utilities')
+		pipeline_base = os.path.join(get_compute_folder(),'/'.join(dir_list))
+
+
+		self._tmp = os.path.join(pipeline_base,filename,'tmp')
+		self._out = os.path.join(pipeline_base,filename,'out')
+		self._store = os.path.join(pipeline_base,filename,'store')
+
+		folder_idx = init_root_dir.split('/').index('Projects')
+		self._data = '/'.join(init_root_dir.split('/')[:folder_idx+2])+'/Data/'
+
+		for dirs in [self._data,self._tmp,self._out,self._store]:
+			self.check_folder(dirs)				
