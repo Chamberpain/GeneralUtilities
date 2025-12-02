@@ -1,0 +1,3 @@
+'https://erddap.aoml.noaa.gov/gdp/erddap/tabledap/drifter_6hour_qc.csv?ID%2CWMO%2Ctime%2Clatitude%2Clongitude%2Cve%2Cvn&time%3E=1979-02-15&time%3C=2024-08-16T12%3A00%3A00Z&latitude%3E=16&latitude%3C=22.5&longitude%3E=-68.5&longitude%3C=-65'
+'https://erddap.aoml.noaa.gov/gdp/erddap/tabledap/drifter_6hour_qc.csv?ID%2CWMO%2Ctime%2Clatitude%2Clongitude%2Cve%2Cvn&time%3E=1979-02-15&time%3C=2024-08-16T12%3A00%3A00Z&latitude%3E=16&latitude%3C=22&longitude%3E=-159&longitude%3C=-154'
+'https://erddap.aoml.noaa.gov/gdp/erddap/tabledap/drifter_6hour_qc.csv?ID%2CWMO%2Ctime%2Clatitude%2Clongitude%2Cve%2Cvn&time%3E=1979-02-15&time%3C=2024-08-16T12%3A00%3A00Z&latitude%3E=34&latitude%3C=39&longitude%3E=-126&longitude%3C=-121.5'

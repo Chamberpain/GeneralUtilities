@@ -254,6 +254,20 @@ class DrifterArrayBase(dict):
 			recent_date_list+=[x.prof.date[-1]]
 		return recent_date_list	
 
+	def get_time_mask(self,time):
+		time_mask = []
+		for x in self.values():
+			nearest_time = x.prof.date.find_nearest(time,test=False)
+			time_mask.append(abs((nearest_time-time).days)<=90) #if the nearest time is outside of 3 months on either side, then it is not included 
+		return time_mask
+
+	def get_time_bins(self,lat_bins,lon_bins,time):
+		bin_list = []
+		for x in self.values():
+			idx = x.prof.date.find_nearest(time, idx=True,test=False)
+			bin_list+=[x.prof.pos.return_pos_bins(lat_bins,lon_bins,index_values=False)[idx]]
+		return bin_list
+
 	def get_recent_mask(self):
 		date_list = self.get_recent_date_list()
 		return [max(date_list)-datetime.timedelta(days=180)<x for x in date_list]

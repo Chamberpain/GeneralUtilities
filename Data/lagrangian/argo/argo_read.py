@@ -55,6 +55,9 @@ class ArgoReader(BaseRead):
 					sprof_files = os.listdir(sprof_folder)
 					sprof_files = [x for x in sprof_files if x.endswith('Sprof.nc')]
 					self.prof = self._file_reader(sprof_folder,sprof_files,'prof.nc',BGCProfClass)
+					if not self.prof:
+						raise ValueError
+					print('******  I have opened a BGC file ******')
 				except:
 					try:
 						ProfClass = prof_class_dict[self.meta.platform_type]

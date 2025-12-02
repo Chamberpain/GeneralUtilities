@@ -131,8 +131,8 @@ class BaseCartopy():
 		return np.meshgrid(self.lon_grid,self.lat_grid)
 
 	def finish_map(self,adjustable=False):
-		self.ax.add_feature(cfeature.LAND)
-		self.ax.add_feature(cfeature.COASTLINE)
+		self.ax.add_feature(cfeature.LAND.with_scale('10m'))
+		self.ax.add_feature(cfeature.COASTLINE.with_scale('10m'))
 		if adjustable:
 			self.ax.set_adjustable('datalim')
 		else:

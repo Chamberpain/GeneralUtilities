@@ -3,12 +3,19 @@ from GeneralUtilities.Data.Lagrangian.Argo.argo_read import ArgoReader
 from GeneralUtilities.Data.Lagrangian.drifter_base_class import DrifterArrayBase
 from netCDF4 import Dataset
 import numpy as np
+from OptimalArray.Utilities.H import HInstance, Float
+from GeneralUtilities.Compute.list import VariableList
+import geopy
 
 class ArgoArray(DrifterArrayBase):
-	def __init__(self,*args,num=99999,**kwargs):
+	def __init__(self,*args,**kwargs):
 		super().__init__(*args, **kwargs)
+
+	@classmethod
+	def load(cls,num=99999):
 		matches = compile_classes()
 		number = 0
+		holder = cls()
 		for match in matches:
 			if number>num:
 				continue
@@ -16,8 +23,9 @@ class ArgoArray(DrifterArrayBase):
 			print('I am opening number match ',number)
 			print ('filename is ',matches[number])
 			if not argo_instance.problem:
-				self.update({(argo_instance.meta.id,argo_instance)})
-			number += 1 
+				holder.update({(argo_instance.meta.id,argo_instance)})
+			number += 1
+		return holder 
 
 	def get_positioning_system_list(self):
 		pos_list = []
@@ -48,3 +56,7 @@ class ArgoArray(DrifterArrayBase):
 		date_mask = self.get_recent_mask()
 		mask = np.array(sensor_mask)&np.array(date_mask)
 		return np.array(bin_list)[mask]
+
+
+
+

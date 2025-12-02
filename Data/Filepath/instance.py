@@ -44,9 +44,12 @@ class PathHandlerBase(object):
 class FilePathHandler(PathHandlerBase):
 	def __init__(self,init_root_dir,filename):
 		init_root_dir_list = init_root_dir.split('/')
-		idx = init_root_dir_list.index('Utilities')
-		dir_list = init_root_dir_list[idx-1:]
-		dir_list.remove('Utilities')
+		idx = init_root_dir.split('/').index('Projects')
+		dir_list = init_root_dir_list[idx+1:]
+		try:
+			dir_list.remove('Utilities')
+		except:
+			pass
 		pipeline_base = os.path.join(get_data_folder(),'/'.join(dir_list))
 
 
@@ -54,8 +57,7 @@ class FilePathHandler(PathHandlerBase):
 		self._out = os.path.join(pipeline_base,filename,'out')
 		self._store = os.path.join(pipeline_base,filename,'store')
 
-		folder_idx = init_root_dir.split('/').index('Projects')
-		self._data = '/'.join(init_root_dir.split('/')[:folder_idx+2])+'/Data/'
+		self._data = '/'.join(init_root_dir.split('/')[:idx+2])+'/Data/'
 
 		for dirs in [self._data,self._tmp,self._out,self._store]:
 			self.check_folder(dirs)
@@ -63,9 +65,12 @@ class FilePathHandler(PathHandlerBase):
 class ComputePathHandler(PathHandlerBase):
 	def __init__(self,init_root_dir,filename):
 		init_root_dir_list = init_root_dir.split('/')
-		idx = init_root_dir_list.index('Utilities')
-		dir_list = init_root_dir_list[idx-1:]
-		dir_list.remove('Utilities')
+		idx = init_root_dir.split('/').index('Projects')
+		dir_list = init_root_dir_list[idx+1:]
+		try:
+			dir_list.remove('Utilities')
+		except:
+			pass
 		pipeline_base = os.path.join(get_compute_folder(),'/'.join(dir_list))
 
 
@@ -73,8 +78,7 @@ class ComputePathHandler(PathHandlerBase):
 		self._out = os.path.join(pipeline_base,filename,'out')
 		self._store = os.path.join(pipeline_base,filename,'store')
 
-		folder_idx = init_root_dir.split('/').index('Projects')
-		self._data = '/'.join(init_root_dir.split('/')[:folder_idx+2])+'/Data/'
+		self._data = '/'.join(init_root_dir.split('/')[:idx+2])+'/Data/'
 
 		for dirs in [self._data,self._tmp,self._out,self._store]:
 			self.check_folder(dirs)				
