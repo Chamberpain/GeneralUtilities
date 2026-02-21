@@ -1,4 +1,3 @@
-from OptimalArray.Utilities.CM4Mat import CovCM4Global
 from GeneralUtilities.Data.Mapped.mapped_base import MappedBase
 from GeneralUtilities.Compute.list import LonList, LatList
 import matplotlib.pyplot as plt
@@ -7,18 +6,40 @@ import os
 import numpy as np
 from netCDF4 import Dataset
 from TransitionMatrix.Utilities.Utilities import shiftgrid
-from OptimalArray.Utilities.CM4Mat import CovCM4
 import pickle
 from GeneralUtilities.Data.Filepath.instance import FilePathHandler, make_folder_if_does_not_exist
 from GeneralUtilities.Data.Mapped.__init__ import ROOT_DIR
+from GeneralUtilities.Data.Filepath.instance import get_data_folder
 
-datadir = CovCM4.data_directory
+
+data_directory = os.path.join(get_data_folder(),'Processed/CM4/')
+
+def get_filenames():
+	master_dict = {}
+	for file in os.listdir(data_directory):
+		if '.DS_Store' in file:
+			continue
+		if 'mean.pkl' in file:
+			continue
+		if 'var.pkl' in file:
+			continue
+		if 'int.pkl' in file:
+			continue
+		filename = os.path.join(data_directory,file)
+		filename = filename
+		var = file.split('_')[0]
+		try:
+			master_dict[var].append(filename)
+		except KeyError:
+			master_dict[var] = [filename]
+	return list(master_dict.items())
+
 
 class CM4(MappedBase):
 	type = 'cm4'
 	max_depth_lev = 25
 	def return_dimensions(self):
-		filename = dict([(x,y) for x,y in CovCM4Global.get_filenames()])[self.variable]
+		filename = dict([(x,y) for x,y in get_filenames()])[self.variable]
 		nc_fid = Dataset(filename[0])
 		lats = nc_fid["lat"][:]
 		lons = nc_fid["lon"][:]
@@ -27,12 +48,12 @@ class CM4(MappedBase):
 		return (LonList(lons),LatList(lats))
 
 	def return_units(self):
-		filename = dict([(x,y) for x,y in CovCM4Global.get_filenames()])[self.variable]
+		filename = dict([(x,y) for x,y in get_filenames()])[self.variable]
 		nc_fid = Dataset(filename[0])
 		return nc_fid.variables[self.variable].units
 
 	def return_dataset(self,depth_idx=2):
-		master_list = CovCM4Global.get_filenames()
+		master_list = get_filenames()
 		file_list = dict([(x,y) for x,y in master_list])[self.variable]
 		array_variable_list = []
 		for file in np.sort(file_list):
@@ -46,7 +67,7 @@ class CM4(MappedBase):
 		return (data,lons)
 
 	def return_int(self):
-		master_list = CovCM4Global.get_filenames()
+		master_list = get_filenames()
 		file_list = dict([(x,y) for x,y in master_list])[self.variable]
 		array_variable_list = []
 		for file in np.sort(file_list):
@@ -70,7 +91,7 @@ class CM4(MappedBase):
 		return (data,lons)
 
 	def return_mean(self,depth_idx=2):
-		filename = os.path.join(datadir,self.type+'_'+self.variable+'_'+str(depth_idx)+'_mean.pkl')
+		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_'+str(depth_idx)+'_mean.pkl')
 		try:
 		    with open(filename, 'rb') as file:
 		    	data = pickle.load(file)
@@ -86,7 +107,7 @@ class CM4(MappedBase):
 		return data
 
 	def return_var(self,depth_idx=2):
-		filename = os.path.join(datadir,self.type+'_'+self.variable+'_'+str(depth_idx)+'_var.pkl')
+		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_'+str(depth_idx)+'_var.pkl')
 		try:
 		    with open(filename, 'rb') as file:
 		    	data = pickle.load(file)
@@ -102,7 +123,7 @@ class CM4(MappedBase):
 		return data
 
 	def return_int_mean(self):
-		filename = os.path.join(datadir,self.type+'_'+self.variable+'_int_mean.pkl')
+		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_int_mean.pkl')
 		try:
 		    with open(filename, 'rb') as file:
 		    	data = pickle.load(file)
@@ -118,7 +139,7 @@ class CM4(MappedBase):
 		return data
 
 	def return_int_var(self):
-		filename = os.path.join(datadir,self.type+'_'+self.variable+'_int_var.pkl')
+		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_int_var.pkl')
 		try:
 		    with open(filename, 'rb') as file:
 		    	data = pickle.load(file)
@@ -166,12 +187,12 @@ class SurfaceCM4(MappedBase):
 	type = 'cm4'
 
 	def return_units(self):
-		filename = dict([(x,y) for x,y in CovCM4Global.get_filenames()])[self.variable]
+		filename = dict([(x,y) for x,y in get_filenames()])[self.variable]
 		nc_fid = Dataset(filename[0])
 		return nc_fid.variables[self.variable].units
 
 	def return_dataset(self):
-		master_list = CovCM4Global.get_filenames()
+		master_list = get_filenames()
 		file_list = dict([(x,y) for x,y in master_list])[self.variable]
 		array_variable_list = []
 		for file in np.sort(file_list):
@@ -185,7 +206,7 @@ class SurfaceCM4(MappedBase):
 		return (data,lons)
 
 	def return_mean(self):
-		filename = os.path.join(datadir,self.type+'_'+self.variable+'_'+str(depth_idx)+'_mean.pkl')
+		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_'+str(depth_idx)+'_mean.pkl')
 		try:
 		    with open(filename, 'rb') as file:
 		    	data = pickle.load(file)
@@ -201,7 +222,7 @@ class SurfaceCM4(MappedBase):
 		return data
 
 	def return_var(self):
-		filename = os.path.join(datadir,self.type+'_'+self.variable+'_'+str(depth_idx)+'_var.pkl')
+		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_'+str(depth_idx)+'_var.pkl')
 		try:
 		    with open(filename, 'rb') as file:
 		    	data = pickle.load(file)
