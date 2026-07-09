@@ -182,6 +182,18 @@ class PacificCartopy(RegionalBase):
     def __init__(self,*args,**kwargs):
         print('I am plotting Pacific')
         super().__init__(*args,**kwargs)
+    lllat = 38.9
+    urlat = 43
+    lllon = -127
+    urlon = -123.9
+class HumboldtCartopy(RegionalBase):
+    llcrnrlon=-127.
+    llcrnrlat=39.
+    urcrnrlon=-124.
+    urcrnrlat=43.
+    def __init__(self,*args,**kwargs):
+        print('I am plotting Gods Country')
+        super().__init__(*args,**kwargs)
 
 class AtlanticCartopy(RegionalBase):
     llcrnrlon=-80.
