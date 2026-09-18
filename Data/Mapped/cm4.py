@@ -11,7 +11,6 @@ from GeneralUtilities.Data.Filepath.instance import FilePathHandler, make_folder
 from GeneralUtilities.Data.Mapped.__init__ import ROOT_DIR
 from GeneralUtilities.Data.Filepath.instance import get_data_folder
 import gsw
-import OptimalArray.Utilities.CM4Mat as CM4Mat
 
 data_directory = os.path.join(get_data_folder(),'Processed/CM4/')
 
@@ -33,10 +32,13 @@ def get_filenames():
 			master_dict[var].append(filename)
 		except KeyError:
 			master_dict[var] = [filename]
-	for var in master_dict.keys():
-		master_dict[var] = np.sort(master_dict[var]).tolist()
 	return list(master_dict.items())
 
+def get_depths():
+	var,files = get_filenames()[0]
+	file = files[0]
+	dh = Dataset(file)
+	return dh["lev_bnds"][:]
 
 class CM4(MappedBase):
 	type = 'cm4'
@@ -73,38 +75,6 @@ class CM4(MappedBase):
 		data.units = nc_fid[self.variable].units
 		return (data,lons)
 
-	def return_full_dataset(self):
-		master_list = get_filenames()
-		file_list = dict([(x,y) for x,y in master_list])[self.variable]
-		array_variable_list = []
-		for file in np.sort(file_list):
-			print(file)
-			nc_fid = Dataset(file)
-			array_variable_list.append(nc_fid[self.variable][:,:self.max_depth_lev,:,:])
-		lons = nc_fid["lon"][:]
-		data = np.vstack(array_variable_list)
-		data,lons = shiftgrid(180.5, data, lons, start=False)
-		data = np.ma.masked_greater(data, 10 ** 19)
-		data.units = nc_fid[self.variable].units
-		return (data,lons)
-
-	def return_full_mean(self):
-		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_full_mean.pkl')
-		try:
-		    with open(filename, 'rb') as file:
-		    	data = pickle.load(file)
-		    print('The mean was successfully loaded')
-		    file.close()
-		except:
-			print('The mean has not been calculated. Calculating...')
-			data,lons = self.return_full_dataset()
-			data = data.mean(axis=0)
-			with open(filename, 'wb') as file:
-				pickle.dump(data, file)
-			file.close()
-			print('The Mean was successfully calculated and saved. ')
-		return data
-
 	def return_int(self):
 		master_list = get_filenames()
 		file_list = dict([(x,y) for x,y in master_list])[self.variable]
@@ -113,7 +83,7 @@ class CM4(MappedBase):
 			nc_fid = Dataset(file)
 			var_temp = nc_fid[self.variable][:,:self.max_depth_lev,:,:]
 			if file ==np.sort(file_list)[0]:
-				delta_z = np.diff(CM4Mat.CovCM4Global.get_depths().data)
+				delta_z = np.diff(get_depths().data)
 				delta_z = delta_z.flatten().tolist()[:self.max_depth_lev]
 				reshape_dims = np.ones(var_temp.shape, dtype=int)
 				for k,delta in enumerate(delta_z):
@@ -193,28 +163,6 @@ class CM4(MappedBase):
 			print('The variance was successfully calculated and saved. ')
 		return data
 
-	def return_depth_covariance(self):
-		filename = os.path.join(data_directory,self.type+'_'+self.variable+'_vert_cov.pkl')
-		try:
-		    with open(filename, 'rb') as file:
-		    	cov = pickle.load(file)
-		    print('The vertical covariance was successfully loaded')
-		    file.close()
-		except:
-			print('The variance has not been calculated. Calculating...')
-			data,lons = self.return_full_dataset()
-			cov = np.ones([self.max_depth_lev,self.max_depth_lev,data.shape[2],data.shape[3]])
-			for i in range(data.shape[2]):
-				print(i)
-				for j in range(data.shape[3]):
-					cov[:,:,i,j] = np.ma.cov(data[:,:,i,j].transpose()).filled()
-			cov = np.ma.masked_greater(cov,10**10)
-			with open(filename, 'wb') as file:
-				pickle.dump(cov, file)
-			file.close()
-			print('The variance was successfully calculated and saved. ')
-		return cov
-
 class CM4O2(CM4):
 	variable = 'o2'
 	plot_file_handler = FilePathHandler(ROOT_DIR,CM4.type+'/'+variable+'/')
@@ -265,7 +213,7 @@ class CM4Density(CM4):
 		return nc_fid.variables['thetao'].units
 
 	def return_dataset(self,depth_idx=2):
-		depth = CM4Mat.CovCM4Global.get_depths()[depth_idx][1]
+		depth = get_depths()[depth_idx][1]
 		master_list = get_filenames()
 		data_dict = {}
 		for var in ['thetao','so']:
@@ -282,49 +230,35 @@ class CM4Density(CM4):
 		data = gsw.density.rho(data_dict['so'],data_dict['thetao'],depth)
 		return (data,lons)
 
-	def return_full_dataset(self):
-		master_list = get_filenames()
-		file_dict = dict([(x,y) for x,y in master_list])
-		file_list = zip(file_dict['thetao'],file_dict['so'])
-		array_variable_list = []
-
-		for file_t,file_s in file_list:
-			nc_fid_t = Dataset(file_t)
-			var_t = nc_fid_t['thetao'][:,:self.max_depth_lev,:,:]
-			nc_fid_s = Dataset(file_s)
-			var_s = nc_fid_s['so'][:,:self.max_depth_lev,:,:]
-			
-			z = [x[0] for x in CM4Mat.CovCM4Global.get_depths().data][:self.max_depth_lev]
-			reshape_dims_z = np.ones(var_t.shape, dtype=int)
-			for k,z in enumerate(z):
-				reshape_dims_z[:,k,:,:] = reshape_dims_z[:,k,:,:]*z
-
-			print('The data mask sum is ',var_s.mask.sum())
-			var_temp = gsw.density.rho(var_s,var_t,reshape_dims_z)
-
-
-			array_variable_list.append(var_temp)
-		lons = nc_fid_t["lon"][:]
-		data = np.vstack(array_variable_list)
-		data,lons = shiftgrid(180.5, data, lons, start=False)
-		data = np.ma.masked_greater(data, 10 ** 19)
-		return (data,lons)
-
 	def return_int(self):
-		data,lons = self.return_full_dataset()
-		delta_z = np.diff(CM4Mat.CovCM4Global.get_depths().data)
-		delta_z = delta_z.flatten().tolist()[:self.max_depth_lev]		
-		reshape_dims_delta_z = np.ones(data.shape, dtype=int)
-
-		for k,delta in enumerate(delta_z):
-			reshape_dims_delta_z[:,k,:,:] = reshape_dims_delta_z[:,k,:,:]*delta
-		data = data*reshape_dims_delta_z
-		data = data.sum(axis=1) #now we have computed the vertical integral
+		master_list = get_filenames()
+		data_dict = {}
+		for var in ['thetao','so']:
+			file_list = dict([(x,y) for x,y in master_list])[var]
+			array_variable_list = []
+			for file in np.sort(file_list):
+				nc_fid = Dataset(file)
+				var_temp = nc_fid[var][:,:self.max_depth_lev,:,:]
+				if file ==np.sort(file_list)[0]:
+					delta_z = np.diff(get_depths().data)
+					delta_z = delta_z.flatten().tolist()[:self.max_depth_lev]
+					reshape_dims = np.ones(var_temp.shape, dtype=int)
+					for k,delta in enumerate(delta_z):
+						reshape_dims[:,k,:,:] = reshape_dims[:,k,:,:]*delta
+				print('The data mask sum is ',var_temp.mask.sum())
+				var_temp = var_temp*reshape_dims[:var_temp.shape[0],:,:,:]
+				var_temp = var_temp.sum(axis=1) #now we have computed the vertical integral
+				array_variable_list.append(var_temp)
+			lons = nc_fid["lon"][:]
+			data = np.vstack(array_variable_list)
+			data,lons = shiftgrid(180.5, data, lons, start=False)
+			data = np.ma.masked_greater(data, 10 ** 19)
+			data_dict[var] = data
 		return (data,lons)
 
 
 class CM4HeatContent(CM4):
-	variable = 'heat_content'
+	variable = 'thetao'
 	plot_file_handler = FilePathHandler(ROOT_DIR,CM4.type+'/'+variable+'/')
 
 	def return_int(self):
@@ -335,7 +269,7 @@ class CM4HeatContent(CM4):
 			nc_fid = Dataset(file)
 			var_temp = nc_fid[self.variable][:,:self.max_depth_lev,:,:]
 			if file ==np.sort(file_list)[0]:
-				delta_z = np.diff(CM4Mat.CovCM4Global.get_depths().data)
+				delta_z = np.diff(get_depths().data)
 				delta_z = delta_z.flatten().tolist()[:self.max_depth_lev]
 				reshape_dims = np.ones(var_temp.shape, dtype=int)
 				for k,delta in enumerate(delta_z):

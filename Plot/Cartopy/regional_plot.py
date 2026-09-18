@@ -204,6 +204,16 @@ class AtlanticCartopy(RegionalBase):
         print('I am plotting Atlantic')
         super().__init__(*args,**kwargs)
 
+class USVICartopy(RegionalBase):
+    llcrnrlon= -65.5
+    llcrnrlat=17.5
+    urcrnrlon=-64.0
+    urcrnrlat=18.5
+    def __init__(self,*args,**kwargs):
+        print('I am plotting USVI')
+        super().__init__(*args,**kwargs)
+
+
 class SouthernOceanCartopy(RegionalBase):
     llcrnrlon=-180.
     llcrnrlat=-90.
@@ -212,3 +222,11 @@ class SouthernOceanCartopy(RegionalBase):
     def __init__(self,*args,**kwargs):
         print('I am plotting Southern Ocean')
         super().__init__(*args,**kwargs)
+
+class AdjustableBase(BaseCartopy):
+# need to add class method to generate ax with center lon
+    central_longitude=0
+    def __init__(self,lat,lon,*args,adjustable=False,extent=0.3,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.ax.set_extent([lon-extent,lon+extent,lat-extent,lat+extent], crs=ccrs.PlateCarree())
+        self.finish_map(adjustable=adjustable)
