@@ -1,0 +1,1 @@
+Project-specific plotting scripts belong here. Reusable mapping routines remain in Data/Mapped and are used by consuming project plotting folders. Generated figures use FilePathHandler out; rendering scratch uses ComputePathHandler tmp.
